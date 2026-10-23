@@ -1,0 +1,82 @@
+[
+  {
+    "filename": "boy_focus.jpg",
+    "format": "jpeg",
+    "width": 1280,
+    "height": 720,
+    "space": "srgb",
+    "channels": 3,
+    "sizeBytes": 140534,
+    "hasAlpha": false
+  },
+  {
+    "filename": "galaxy.jpg",
+    "format": "jpeg",
+    "width": 5903,
+    "height": 3766,
+    "space": "srgb",
+    "channels": 3,
+    "sizeBytes": 5707253,
+    "hasAlpha": false
+  },
+  {
+    "filename": "girl_desktop.jpg",
+    "format": "jpeg",
+    "width": 1920,
+    "height": 1080,
+    "space": "srgb",
+    "channels": 3,
+    "sizeBytes": 155570,
+    "hasAlpha": false
+  },
+  {
+    "filename": "halloween.jpg",
+    "format": "jpeg",
+    "width": 1920,
+    "height": 1281,
+    "space": "srgb",
+    "channels": 3,
+    "sizeBytes": 119071,
+    "hasAlpha": false
+  },
+  {
+    "filename": "japan_street.avif",
+    "format": "heif",
+    "width": 2040,
+    "height": 1409,
+    "space": "srgb",
+    "channels": 3,
+    "sizeBytes": 212691,
+    "hasAlpha": false
+  },
+  {
+    "filename": "laptop_desk.jpg",
+    "format": "jpeg",
+    "width": 2048,
+    "height": 1152,
+    "space": "srgb",
+    "channels": 3,
+    "sizeBytes": 155548,
+    "hasAlpha": false
+  },
+  {
+    "filename": "sikera_sunset.jpg",
+    "format": "jpeg",
+    "width": 1529,
+    "height": 860,
+    "space": "srgb",
+    "channels": 3,
+    "sizeBytes": 253195,
+    "hasAlpha": false
+  },
+  {
+    "filename": "sunset.avif",
+    "format": "heif",
+    "width": 2400,
+    "height": 1500,
+    "space": "srgb",
+    "channels": 3,
+    "sizeBytes": 141933,
+    "hasAlpha": false
+  }
+]

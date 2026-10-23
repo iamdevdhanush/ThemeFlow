@@ -1,0 +1,385 @@
+/* ThemeFlow Codeforces Injectable Theme Stylesheet */
+
+:root {
+  --tf-accent: #a78bfa;
+  --tf-accent-glow: rgba(167, 139, 250, 0.35);
+  --tf-bg-card: rgba(20, 20, 28, 0.82);
+  --tf-bg-card-hover: rgba(26, 26, 38, 0.9);
+  --tf-bg-input: rgba(15, 15, 22, 0.92);
+  --tf-border-color: rgba(255, 255, 255, 0.09);
+  --tf-text-primary: #f3f4f6;
+  --tf-text-secondary: #9ca3af;
+  --tf-text-muted: #6b7280;
+  --tf-code-font: 'JetBrains Mono', Consolas, 'Courier New', monospace;
+  --tf-card-radius: 10px;
+}
+
+/* Background layers */
+#themeflow-bg-layer {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: -9999 !important;
+  background-size: cover !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  pointer-events: none !important;
+  transition: opacity 0.3s ease, filter 0.3s ease !important;
+}
+
+#themeflow-overlay-layer {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: -9998 !important;
+  pointer-events: none !important;
+  transition: background-color 0.3s ease !important;
+}
+
+/* Base Body and Reset */
+body.themeflow-active,
+html.themeflow-active {
+  background-color: transparent !important;
+  background-image: none !important;
+  color: var(--tf-text-primary) !important;
+  min-height: 100vh !important;
+}
+
+body.themeflow-active #body,
+body.themeflow-active #pageContent {
+  background: transparent !important;
+}
+
+/* Header & Nav */
+body.themeflow-active #header {
+  background: transparent !important;
+  padding: 12px 0 !important;
+  border-bottom: 1px solid var(--tf-border-color) !important;
+}
+
+body.themeflow-active .menu-list-container {
+  background: var(--tf-bg-card) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid var(--tf-border-color) !important;
+  border-radius: var(--tf-card-radius) !important;
+  padding: 4px 8px !important;
+}
+
+body.themeflow-active .main-menu-list li a {
+  color: var(--tf-text-primary) !important;
+  font-weight: 500 !important;
+  transition: color 0.15s ease !important;
+}
+
+body.themeflow-active .main-menu-list li a:hover,
+body.themeflow-active .main-menu-list li.current a {
+  color: var(--tf-accent) !important;
+}
+
+body.themeflow-active .personal-sidebar,
+body.themeflow-active .lang-chooser {
+  color: var(--tf-text-secondary) !important;
+}
+
+body.themeflow-active .lang-chooser a {
+  color: var(--tf-accent) !important;
+}
+
+/* Boxes & Panels */
+body.themeflow-active .roundbox,
+body.themeflow-active .sidebox,
+body.themeflow-active .side-box,
+body.themeflow-active .titled-box,
+body.themeflow-active .topic,
+body.themeflow-active .borderTopRound,
+body.themeflow-active .bottom-links {
+  background: var(--tf-bg-card) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border: 1px solid var(--tf-border-color) !important;
+  border-radius: var(--tf-card-radius) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35) !important;
+  color: var(--tf-text-primary) !important;
+  overflow: hidden !important;
+}
+
+body.themeflow-active .roundbox .caption,
+body.themeflow-active .sidebox .caption,
+body.themeflow-active .side-box .caption,
+body.themeflow-active .caption.titled {
+  color: var(--tf-accent) !important;
+  font-weight: 600 !important;
+  border-bottom: 1px solid var(--tf-border-color) !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  padding: 8px 12px !important;
+}
+
+body.themeflow-active .roundbox .top-link {
+  color: var(--tf-accent) !important;
+}
+
+/* Problem Statement */
+body.themeflow-active .problem-statement {
+  background: transparent !important;
+  color: var(--tf-text-primary) !important;
+  line-height: 1.65 !important;
+  font-size: 14.5px !important;
+}
+
+body.themeflow-active .problem-statement .header .title {
+  color: var(--tf-accent) !important;
+  font-size: 24px !important;
+  font-weight: 700 !important;
+  margin-bottom: 8px !important;
+  text-shadow: 0 0 16px var(--tf-accent-glow) !important;
+}
+
+body.themeflow-active .problem-statement .header .time-limit,
+body.themeflow-active .problem-statement .header .memory-limit,
+body.themeflow-active .problem-statement .header .input-file,
+body.themeflow-active .problem-statement .header .output-file {
+  color: var(--tf-text-secondary) !important;
+  font-size: 13px !important;
+}
+
+body.themeflow-active .problem-statement .property-title {
+  color: var(--tf-text-muted) !important;
+}
+
+body.themeflow-active .problem-statement .section-title {
+  color: var(--tf-accent) !important;
+  font-weight: 600 !important;
+  font-size: 16px !important;
+  border-bottom: 1px dashed var(--tf-border-color) !important;
+  padding-bottom: 4px !important;
+  margin-top: 18px !important;
+}
+
+/* MathJax Formulas */
+body.themeflow-active .MathJax,
+body.themeflow-active .MathJax_Display,
+body.themeflow-active mjx-container,
+body.themeflow-active .tex-span {
+  color: #f8fafc !important;
+  fill: #f8fafc !important;
+}
+
+body.themeflow-active svg.MathJax {
+  fill: #f8fafc !important;
+  color: #f8fafc !important;
+}
+
+/* Sample Tests */
+body.themeflow-active .sample-test {
+  background: rgba(10, 10, 16, 0.88) !important;
+  border: 1px solid var(--tf-border-color) !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+}
+
+body.themeflow-active .sample-test .input,
+body.themeflow-active .sample-test .output {
+  border-color: var(--tf-border-color) !important;
+}
+
+body.themeflow-active .sample-test .title {
+  color: var(--tf-accent) !important;
+  font-family: var(--tf-code-font) !important;
+  font-size: 12px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+
+body.themeflow-active .sample-test pre {
+  background: transparent !important;
+  color: #38bdf8 !important;
+  font-family: var(--tf-code-font) !important;
+  font-size: 13.5px !important;
+  line-height: 1.45 !important;
+}
+
+/* Tables (Submissions, Contests, Standings) */
+body.themeflow-active table.rtable,
+body.themeflow-active table.datatable,
+body.themeflow-active table.status-frame-datatable,
+body.themeflow-active .standings {
+  background: transparent !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  width: 100% !important;
+}
+
+body.themeflow-active table.rtable th,
+body.themeflow-active table.datatable th,
+body.themeflow-active table.status-frame-datatable th {
+  background: rgba(255, 255, 255, 0.04) !important;
+  color: var(--tf-accent) !important;
+  font-weight: 600 !important;
+  border-bottom: 1px solid var(--tf-border-color) !important;
+  padding: 8px 10px !important;
+}
+
+body.themeflow-active table.rtable td,
+body.themeflow-active table.datatable td,
+body.themeflow-active table.status-frame-datatable td {
+  border-bottom: 1px solid var(--tf-border-color) !important;
+  color: var(--tf-text-primary) !important;
+  padding: 8px 10px !important;
+  background: transparent !important;
+}
+
+body.themeflow-active table.rtable tr:hover td,
+body.themeflow-active table.datatable tr:hover td,
+body.themeflow-active table.status-frame-datatable tr:hover td {
+  background: rgba(255, 255, 255, 0.035) !important;
+}
+
+body.themeflow-active tr.highlighted-row td {
+  background: rgba(167, 139, 250, 0.12) !important;
+}
+
+/* Submission Verdicts */
+body.themeflow-active .verdict-accepted,
+body.themeflow-active span.verdict-accepted {
+  color: #4ade80 !important; /* Vivid Emerald */
+  font-weight: 600 !important;
+  text-shadow: 0 0 10px rgba(74, 222, 128, 0.45) !important;
+}
+
+body.themeflow-active .verdict-rejected,
+body.themeflow-active span.verdict-rejected {
+  color: #f87171 !important; /* Soft Red */
+  font-weight: 600 !important;
+}
+
+body.themeflow-active .verdict-waiting,
+body.themeflow-active span.verdict-waiting {
+  color: #38bdf8 !important; /* Cyan Pulse */
+}
+
+body.themeflow-active .verdict-successful-challenge {
+  color: #fbbf24 !important;
+}
+
+/* Links & Accents */
+body.themeflow-active a {
+  color: #60a5fa;
+  text-decoration: none !important;
+  transition: color 0.15s ease;
+}
+
+body.themeflow-active a:hover {
+  color: var(--tf-accent) !important;
+}
+
+/* Form Inputs, Dropdowns, Textareas */
+body.themeflow-active input[type='text'],
+body.themeflow-active input[type='password'],
+body.themeflow-active textarea,
+body.themeflow-active select {
+  background: var(--tf-bg-input) !important;
+  color: var(--tf-text-primary) !important;
+  border: 1px solid var(--tf-border-color) !important;
+  border-radius: 6px !important;
+  padding: 6px 10px !important;
+  outline: none !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+body.themeflow-active input[type='text']:focus,
+body.themeflow-active input[type='password']:focus,
+body.themeflow-active textarea:focus,
+body.themeflow-active select:focus {
+  border-color: var(--tf-accent) !important;
+  box-shadow: 0 0 0 2px var(--tf-accent-glow) !important;
+}
+
+body.themeflow-active input[type='submit'],
+body.themeflow-active input[type='button'],
+body.themeflow-active .button,
+body.themeflow-active button {
+  background: var(--tf-accent) !important;
+  color: #0c0c14 !important;
+  font-weight: 600 !important;
+  border-radius: 6px !important;
+  border: none !important;
+  padding: 6px 14px !important;
+  cursor: pointer !important;
+  transition: opacity 0.2s ease, transform 0.1s ease !important;
+}
+
+body.themeflow-active input[type='submit']:hover,
+body.themeflow-active button:hover {
+  opacity: 0.9 !important;
+}
+
+/* Code Display & Editor */
+body.themeflow-active pre,
+body.themeflow-active code,
+body.themeflow-active .source-copier {
+  font-family: var(--tf-code-font) !important;
+}
+
+body.themeflow-active .ace_editor {
+  background: rgba(14, 14, 20, 0.95) !important;
+  color: #f1f5f9 !important;
+  border: 1px solid var(--tf-border-color) !important;
+  border-radius: 8px !important;
+}
+
+/* User Ranks & Handles readability preservation */
+body.themeflow-active .user-red { color: #f87171 !important; font-weight: bold !important; }
+body.themeflow-active .user-orange { color: #fb923c !important; font-weight: bold !important; }
+body.themeflow-active .user-violet { color: #c084fc !important; font-weight: bold !important; }
+body.themeflow-active .user-blue { color: #60a5fa !important; font-weight: bold !important; }
+body.themeflow-active .user-cyan { color: #38bdf8 !important; }
+body.themeflow-active .user-green { color: #4ade80 !important; }
+body.themeflow-active .user-gray { color: #94a3b8 !important; }
+body.themeflow-active .user-legendary::first-letter { color: #ffffff !important; }
+
+/* Footer */
+body.themeflow-active #footer {
+  color: var(--tf-text-muted) !important;
+  border-top: 1px solid var(--tf-border-color) !important;
+  background: transparent !important;
+  padding: 16px 0 !important;
+}
+
+/* Floating Quick Toggle Pill on Codeforces */
+#themeflow-quick-pill {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(18, 18, 26, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+  padding: 6px 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+  user-select: none;
+}
+
+#themeflow-quick-pill:hover {
+  transform: translateY(-2px);
+  border-color: var(--tf-accent);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6), 0 0 16px var(--tf-accent-glow);
+}
+
+#themeflow-quick-pill svg {
+  width: 16px;
+  height: 16px;
+  color: var(--tf-accent);
+}
+
+#themeflow-quick-pill .tf-pill-text {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: #f1f5f9;
+}

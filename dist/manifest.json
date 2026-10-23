@@ -1,0 +1,64 @@
+{
+  "manifest_version": 3,
+  "name": "ThemeFlow — Codeforces Theme Studio",
+  "version": "1.0.0",
+  "description": "Premium theme studio and visual customizer for Codeforces. Atmospheric wallpapers, dark mode, smooth glassmorphism, and verdict celebrations.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_title": "ThemeFlow",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "options_page": "studio.html",
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "*://codeforces.com/*",
+    "*://*.codeforces.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "*://codeforces.com/*",
+        "*://*.codeforces.com/*"
+      ],
+      "css": [
+        "codeforces.css"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_start"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "IMAGES/*",
+        "thumbnails/*",
+        "icons/*",
+        "sounds/*",
+        "codeforces.css"
+      ],
+      "matches": [
+        "*://codeforces.com/*",
+        "*://*.codeforces.com/*"
+      ]
+    }
+  ]
+}
