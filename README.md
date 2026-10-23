@@ -1,124 +1,119 @@
-# ThemeFlow — Premium Codeforces Theme Studio
+# ThemeFlow — Multi-Platform Theme Studio (LeetCode & Codeforces)
 
-**ThemeFlow** is a production-quality Chrome and Brave extension (Manifest V3) that elevates the visual experience of Codeforces with atmospheric wallpapers, customizable glassmorphism, high-contrast dark themes, ambient visual effects, and verdict celebrations.
+**ThemeFlow** is a production-quality Chrome and Brave extension (Manifest V3) that transforms the visual appearance of both **LeetCode** and **Codeforces** with atmospheric wallpapers, customizable frosted glassmorphism, high-contrast dark themes, ambient visual effects, and verdict celebrations.
 
-Designed to make competitive programming personal, atmospheric, and distraction-free while strictly preserving the legibility of mathematical notation, problem statements, code blocks, contest navigation, and submission forms.
+---
+
+## 🌐 Supported Platforms
+
+| Platform | Host Match Patterns | Adapter | Scoped Stylesheet |
+| :--- | :--- | :--- | :--- |
+| **LeetCode** | `*://leetcode.com/*`<br>`*://*.leetcode.com/*` | [`LeetCodeAdapter`](file:///d:/ThemeFlow/src/platforms/leetcode/leetcodeAdapter.ts) | [`leetcode.css`](file:///d:/ThemeFlow/src/platforms/leetcode/leetcode.css) |
+| **Codeforces** | `*://codeforces.com/*`<br>`*://*.codeforces.com/*` | [`CodeforcesAdapter`](file:///d:/ThemeFlow/src/platforms/codeforces/codeforcesAdapter.ts) | [`codeforces.css`](file:///d:/ThemeFlow/src/content/codeforces.css) |
+
+---
+
+## 🏗️ Multi-Platform Architecture
+
+```text
+ThemeFlow Extension
+├── src/core/               # Shared Core Theme Engine
+│   └── themeEngine.ts     # Injects background & overlay DOM, sets CSS variables, manages effects
+├── src/platforms/          # Separate Platform Adapters & Scoped Styles
+│   ├── leetcode/
+│   │   ├── leetcodeAdapter.ts  # Watches [data-e2e-locator="submission-result"] verdicts & mounts pill
+│   │   └── leetcode.css        # Scoped to body.themeflow-leetcode (overrides --layer-*, Monaco, etc.)
+│   └── codeforces/
+│       ├── codeforcesAdapter.ts # Watches .verdict-accepted table mutations & mounts pill
+│       └── codeforces.css       # Scoped to body.themeflow-codeforces (.roundbox, MathJax, etc.)
+├── src/effects/            # Shared Visual FX & Celebrations
+│   ├── particles.ts       # Canvas Sakura, Rain, Stars (pauses when hidden, respects reduced-motion)
+│   └── confetti.ts        # Dual-cannon confetti burst on Accepted verdicts
+├── src/audio/              # Shared Verdict Audio Engine
+│   └── soundPlayer.ts     # Synthesized Web Audio API chimes & bundled WAV fallback
+├── src/storage/            # Shared Settings & Wallpaper Persistence
+│   └── storage.ts         # chrome.storage.local sync + IndexedDB custom wallpaper engine
+├── src/popup/              # Quick Theme Popup with Platform Indicator
+│   └── Popup.tsx          # Detects active tab platform (LeetCode / Codeforces / Studio)
+└── src/studio/             # Full Theme Studio Customizer
+    └── Studio.tsx         # Dual-platform interactive preview switcher (LeetCode & Codeforces)
+```
 
 ---
 
 ## 📸 Discovered Background Images & Theme Catalog
 
-Every original image in the `IMAGES/` directory was inspected, preserved, and mapped to an atmospheric theme:
+All 8 pre-bundled wallpapers from the [`IMAGES/`](file:///d:/ThemeFlow/IMAGES) folder are supported across both LeetCode and Codeforces:
 
-| Filename | Format | Dimensions | File Size | Theme Name | Description |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| `galaxy.jpg` | JPEG | 5903 &times; 3766 | 5.57 MB | **Cosmic Void** | Infinite deep space nebula with stellar purple and indigo hues. |
-| `japan_street.avif` | AVIF | 2040 &times; 1409 | 207.7 KB | **Neo Tokyo Dusk** | Atmospheric rainy alleyway glowing with tranquil evening lanterns. |
-| `boy_focus.jpg` | JPEG | 1280 &times; 720 | 137.2 KB | **Midnight Focus** | Moody late-night coding session under soft cinematic lamplight. |
-| `girl_desktop.jpg` | JPEG | 1920 &times; 1080 | 151.9 KB | **Cyber Workstation** | Modern multi-monitor developer setup with calm ambient glow. |
-| `laptop_desk.jpg` | JPEG | 2048 &times; 1152 | 151.9 KB | **Zen Workspace** | Clean minimalist desk with warm afternoon sunlight and foliage. |
-| `sunset.avif` | AVIF | 2400 &times; 1500 | 138.6 KB | **Golden Dusk** | Breathtaking sunset casting warm amber gradients across the horizon. |
-| `sikera_sunset.jpg` | JPEG | 1529 &times; 860 | 247.3 KB | **Velvet Horizon** | Dreamy twilight skyline with gentle pastel clouds and quiet evening. |
-| `halloween.jpg` | JPEG | 1920 &times; 1281 | 116.3 KB | **Mystic Hallow** | Enchanting nocturnal forest illuminated by warm lantern glow. |
-
-> **Asset Integrity:** Original high-resolution image files in `IMAGES/` remain untouched. Optimized 480px WebP thumbnails are automatically generated in `dist/thumbnails/` for fast popup and studio rendering.
+| Filename | Format | Dimensions | File Size | Theme ID | Theme Name | Accent Color |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| [`galaxy.jpg`](file:///d:/ThemeFlow/IMAGES/galaxy.jpg) | JPEG | 5903 &times; 3766 | 5.57 MB | `cosmic-void` | **Cosmic Void** | `#a78bfa` (Lavender) |
+| [`japan_street.avif`](file:///d:/ThemeFlow/IMAGES/japan_street.avif) | AVIF/HEIF | 2040 &times; 1409 | 207.7 KB | `neo-tokyo` | **Neo Tokyo Dusk** | `#f472b6` (Sakura Pink) |
+| [`boy_focus.jpg`](file:///d:/ThemeFlow/IMAGES/boy_focus.jpg) | JPEG | 1280 &times; 720 | 137.2 KB | `midnight-focus` | **Midnight Focus** | `#60a5fa` (Sky Blue) |
+| [`girl_desktop.jpg`](file:///d:/ThemeFlow/IMAGES/girl_desktop.jpg) | JPEG | 1920 &times; 1080 | 151.9 KB | `cyber-workstation` | **Cyber Workstation** | `#c084fc` (Violet) |
+| [`laptop_desk.jpg`](file:///d:/ThemeFlow/IMAGES/laptop_desk.jpg) | JPEG | 2048 &times; 1152 | 151.9 KB | `zen-workspace` | **Zen Workspace** | `#34d399` (Emerald) |
+| [`sunset.avif`](file:///d:/ThemeFlow/IMAGES/sunset.avif) | AVIF/HEIF | 2400 &times; 1500 | 138.6 KB | `golden-dusk` | **Golden Dusk** | `#fbbf24` (Amber Gold) |
+| [`sikera_sunset.jpg`](file:///d:/ThemeFlow/IMAGES/sikera_sunset.jpg) | JPEG | 1529 &times; 860 | 247.3 KB | `velvet-horizon` | **Velvet Horizon** | `#f87171` (Coral Rose) |
+| [`halloween.jpg`](file:///d:/ThemeFlow/IMAGES/halloween.jpg) | JPEG | 1920 &times; 1281 | 116.3 KB | `mystic-hallow` | **Mystic Hallow** | `#fb923c` (Pumpkin Glow) |
 
 ---
 
 ## 🚀 Loading into Brave or Chrome
 
-The production build has already been generated in the **`dist/`** directory.
+The production build is in the **[`d:\ThemeFlow\dist`](file:///d:/ThemeFlow/dist)** directory.
 
-### Quick Load:
 1. Open **Brave** or **Google Chrome**.
 2. Navigate to:
-   - In Brave: `brave://extensions`
-   - In Chrome: `chrome://extensions`
+   - **Brave**: `brave://extensions`
+   - **Chrome**: `chrome://extensions`
 3. Toggle on **Developer mode** in the top-right corner.
 4. Click **Load unpacked** in the top-left toolbar.
-5. Select the `dist/` directory from this repository:
+5. Select the folder:
    ```text
    d:\ThemeFlow\dist
    ```
-6. **ThemeFlow** is now installed and active! Pin the extension icon to your browser toolbar for quick access.
+6. The extension is now active on both **LeetCode** and **Codeforces**.
 
 ---
 
-## 🎨 Features & Architecture
+## 🧪 Testing Guide
 
-### 1. Quick Theme Popup (`popup.html`)
-- Compact 340px-wide charcoal interface following modern design standards.
-- Master toggle switch to immediately activate or bypass theming.
-- Card gallery with image previews, theme titles, and short descriptions.
-- Selected state indicator with lavender border, glow, and checkmark badge.
-- One-click launcher to open the full **Theme Studio**.
+### 1. LeetCode Testing (`leetcode.com`)
+1. Navigate to any problem on LeetCode, e.g.:
+   ```text
+   https://leetcode.com/problems/two-sum/
+   ```
+2. Click the **ThemeFlow** extension icon in your browser toolbar.
+3. Verify the platform banner reads: **`LeetCode • Active`**.
+4. Select any theme card (e.g. `Neo Tokyo Dusk`, `Midnight Focus`).
+5. Notice the frosted surfaces, translucent Monaco editor, glowing problem header, and ambient wallpaper.
+6. Submit a solution or click "Run Code": when an Accepted result is returned, the victory chime and celebration burst will fire (if enabled).
 
-### 2. Full Theme Studio (`studio.html`)
-- Dedicated extension page with near-black backdrop and purple accents.
-- **Header**: Live extension status badge, "Reset to Defaults", and direct "Open Codeforces" launcher.
-- **Theme Gallery**: Full grid of all 8 discovered wallpapers + custom upload trigger.
-- **Custom Wallpaper Upload**: Supports user-uploaded PNG, JPEG, WebP, and AVIF up to 10MB. Stored safely in browser IndexedDB to prevent `chrome.storage.local` quota overflow.
-- **Surface Modes**: Deep Dark, OLED Midnight Black, Frosted Glass, and Classic Tint.
-- **Live Atmosphere Controls**: Real-time sliders for overlay darkness (0–95%), background blur (0–20px), wallpaper brightness (40–130%), and panel opacity (30–98%).
-- **Accent Color Presets**: Quick palette (Lavender, Cyan, Emerald, Sakura Pink, Amber, Coral, Violet) plus a custom hex color picker.
-- **Code Typography**: Switch editor and problem monospace fonts between JetBrains Mono, Fira Code, Consolas, and system monospace.
-- **Visual Ambient Effects**:
-  - Gentle falling Sakura petals.
-  - Subtle rainy weather streaks.
-  - Twinkling night stars.
-  - Pauses automatically when tab is hidden (`document.hidden`) and respects `prefers-reduced-motion`.
-- **Verdict Audio & Celebrations**:
-  - Muted by default per specification.
-  - Master volume slider and instant sound testing.
-  - Dual celebration burst (confetti) and victory chime for Accepted (AC) submissions.
-  - Soft reminder tone for Rejected / Wrong Answer (WA) submissions.
-  - Built-in Web Audio API synthesis ensuring zero audio lag and 100% offline functionality.
-- **Interactive Codeforces Preview**:
-  - Realistic Codeforces contest problem header ("1985D - Manhattan Permutations").
-  - Problem statement with stylized math notation and copyable sample input/output.
-  - Syntax-highlighted C++ competitive programming code editor with line numbers.
-  - Interactive "Simulate Accepted (AC)" and "Simulate WA" buttons to test animations and audio directly in the Studio.
+### 2. Codeforces Testing (`codeforces.com`)
+1. Navigate to any problem on Codeforces, e.g.:
+   ```text
+   https://codeforces.com/problemset/problem/4/A
+   ```
+2. Click the **ThemeFlow** extension icon.
+3. Verify the platform banner reads: **`Codeforces • Active`**.
+4. Observe the applied theme, high-contrast MathJax formulas, and the floating ThemeFlow quick pill in the bottom-right corner.
 
-### 3. Codeforces Content Script & Scoped Styling
-- Matches `*://codeforces.com/*` and `*://*.codeforces.com/*`.
-- Inserts a non-intrusive `#themeflow-bg-layer` and `#themeflow-overlay-layer` behind content with zero scroll-lag.
-- Deeply themes Codeforces components (`#pageContent`, `.roundbox`, `.side-box`, `.menu-list-container`, `.rtable`, `.datatable`, `.sample-test`, `.ace_editor`).
-- **MathJax & Formula Protection**: Keeps MathJax SVGs and tex spans bright, crisp, and high-contrast.
-- **Verdict Observer**: MutationObserver monitors submission status tables (`.verdict-accepted`, `span[submissionverdict='OK']`) and automatically triggers celebrations upon receiving an Accepted verdict.
-- **Floating Quick Switcher**: Discreet pill widget in the bottom-right corner of Codeforces pages for one-click access to the Theme Studio.
+### 3. Theme Studio Testing (`studio.html`)
+1. Open the full studio via the popup button or right-clicking extension &rarr; Options.
+2. In the top bar of the Studio preview, toggle between:
+   - **`LeetCode Preview`**: Displays `1. Two Sum`, `Easy` badge, copyable Example 1, and Monaco-styled C++ solution editor.
+   - **`Codeforces Preview`**: Displays `1985D - Manhattan Permutations`, MathJax summation equation, and C++ template.
+3. Adjust sliders (Darkness, Blur, Brightness, Panel Opacity) and verify the preview updates in real time.
+4. Click **`Simulate Accepted (AC)`** to test confetti and audio feedback.
 
 ---
 
-## 🛠️ Development & Build Commands
+## 🛠️ Build Commands
 
 ```bash
-# Install dependencies
-npm install
-
-# Run TypeScript typecheck (0 errors)
+# Typecheck TypeScript (0 errors)
 npm run typecheck
-
-# Start local dev server (for live UI development)
-npm run dev
-
-# Inspect original images and generate optimized thumbnails
-npm run inspect
 
 # Build complete production extension into dist/
 npm run build
 ```
-
----
-
-## 🧪 Testing Checklist
-
-- [x] All 8 discovered wallpapers in `IMAGES/` decoded and mapped to themes.
-- [x] Thumbnails generated in WebP format without modifying original images.
-- [x] Production build generated in `dist/` with valid `manifest.json`.
-- [x] Tested in browser subagent: Theme selection persists and updates preview in real-time.
-- [x] Verified popup UI matches compact charcoal card specification.
-- [x] Verified Theme Studio problem workbench, code editor, sliders, and controls.
-- [x] Verified confetti burst and audio triggers on AC simulation.
-- [x] Sound defaults to muted and requires explicit user enablement.
-- [x] IndexedDB custom wallpaper upload validated with size and format bounds.
-- [x] Content script and scoped CSS tested for MathJax contrast and Codeforces layout integrity.
