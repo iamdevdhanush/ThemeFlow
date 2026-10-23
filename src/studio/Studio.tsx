@@ -15,6 +15,7 @@ import {
   Eye,
   Layers,
   Copy,
+  Globe,
 } from 'lucide-react';
 import {
   UserSettings,
@@ -55,6 +56,7 @@ export const Studio: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [previewBgUrl, setPreviewBgUrl] = useState<string>('');
+  const [previewPlatform, setPreviewPlatform] = useState<'leetcode' | 'codeforces'>('leetcode');
   const effectManagerRef = useRef<EffectManager | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -84,7 +86,6 @@ export const Studio: React.FC = () => {
         }
       }
       if (active) {
-        // In extension context, resolve relative path, otherwise standard relative URL
         if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.getURL) {
           setPreviewBgUrl(chrome.runtime.getURL(config.imagePath));
         } else {
@@ -193,7 +194,8 @@ export const Studio: React.FC = () => {
   };
 
   const handleCopySample = () => {
-    navigator.clipboard.writeText('4\n1 2 4 3');
+    const textToCopy = previewPlatform === 'leetcode' ? '[2,7,11,15]\n9' : '4\n1 2 4 3';
+    navigator.clipboard.writeText(textToCopy);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -206,7 +208,7 @@ export const Studio: React.FC = () => {
     );
   }
 
-  // Dynamic card background color based on mode and glass opacity
+  // Dynamic surface colors
   let previewOverlayColor = `rgba(10, 10, 16, ${config.overlayOpacity})`;
   let previewCardBg = `rgba(20, 20, 28, ${config.cardGlassOpacity})`;
   let previewTextPrimary = '#f3f4f6';
@@ -243,7 +245,7 @@ export const Studio: React.FC = () => {
         <div className="header-actions">
           <div className="status-badge">
             <span className="status-dot"></span>
-            <span>Live on Codeforces</span>
+            <span>Live on LeetCode & Codeforces</span>
           </div>
 
           <button className="btn-secondary" onClick={handleResetDefaults} title="Reset all settings to default">
@@ -252,14 +254,25 @@ export const Studio: React.FC = () => {
           </button>
 
           <a
+            href="https://leetcode.com/problemset/"
+            target="_blank"
+            rel="noreferrer"
+            className="btn-secondary"
+            style={{ textDecoration: 'none', color: '#fb923c' }}
+          >
+            <span>LeetCode</span>
+            <ExternalLink size={13} />
+          </a>
+
+          <a
             href="https://codeforces.com"
             target="_blank"
             rel="noreferrer"
             className="btn-primary"
             style={{ textDecoration: 'none' }}
           >
-            <span>Open Codeforces</span>
-            <ExternalLink size={14} />
+            <span>Codeforces</span>
+            <ExternalLink size={13} />
           </a>
         </div>
       </header>
@@ -557,7 +570,7 @@ export const Studio: React.FC = () => {
           </div>
         </aside>
 
-        {/* Right Main Interactive Codeforces Preview */}
+        {/* Right Main Interactive Preview */}
         <main className="studio-preview-pane">
           {/* Live Background Underlay */}
           <div
@@ -575,7 +588,7 @@ export const Studio: React.FC = () => {
           />
 
           <div className="preview-content">
-            {/* Top Bar / Simulation controls */}
+            {/* Top Bar / Platform Switcher & Simulation */}
             <div
               className="preview-top-bar"
               style={{
@@ -584,14 +597,39 @@ export const Studio: React.FC = () => {
                 backdropFilter: 'blur(16px)',
               }}
             >
-              <div className="cf-breadcrumb">
-                <span className="cf-contest-badge">CF Round 952 (Div. 4)</span>
-                <span>/</span>
-                <span style={{ color: config.accentColor, fontWeight: 600 }}>1985D - Manhattan Permutations</span>
+              {/* Platform Switcher Buttons */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <button
+                  className={`btn-secondary ${previewPlatform === 'leetcode' ? 'active-platform' : ''}`}
+                  onClick={() => setPreviewPlatform('leetcode')}
+                  style={{
+                    padding: '4px 12px',
+                    borderColor: previewPlatform === 'leetcode' ? '#fb923c' : 'var(--studio-border)',
+                    color: previewPlatform === 'leetcode' ? '#fb923c' : 'inherit',
+                    backgroundColor: previewPlatform === 'leetcode' ? 'rgba(251, 146, 60, 0.15)' : 'transparent',
+                    fontWeight: 600,
+                  }}
+                >
+                  <span>LeetCode Preview</span>
+                </button>
+
+                <button
+                  className={`btn-secondary ${previewPlatform === 'codeforces' ? 'active-platform' : ''}`}
+                  onClick={() => setPreviewPlatform('codeforces')}
+                  style={{
+                    padding: '4px 12px',
+                    borderColor: previewPlatform === 'codeforces' ? config.accentColor : 'var(--studio-border)',
+                    color: previewPlatform === 'codeforces' ? config.accentColor : 'inherit',
+                    backgroundColor: previewPlatform === 'codeforces' ? `${config.accentColor}22` : 'transparent',
+                    fontWeight: 600,
+                  }}
+                >
+                  <span>Codeforces Preview</span>
+                </button>
               </div>
 
               <div className="preview-sim-buttons">
-                <button className="btn-sim-ac" onClick={handleSimulateAc} title="Test AC confetti & sound">
+                <button className="btn-sim-ac" onClick={handleSimulateAc} title="Test AC celebration">
                   <Check size={14} />
                   <span>Simulate Accepted (AC)</span>
                 </button>
@@ -601,144 +639,283 @@ export const Studio: React.FC = () => {
               </div>
             </div>
 
-            {/* Split Problem Workbench */}
-            <div className="preview-workbench">
-              {/* Problem Statement Card */}
-              <div
-                className="preview-panel"
-                style={{
-                  backgroundColor: previewCardBg,
-                  backdropFilter: 'blur(16px)',
-                  color: previewTextPrimary,
-                }}
-              >
-                <div className="panel-header-bar">
-                  <h2 style={{ color: config.accentColor }}>D. Manhattan Permutations</h2>
-                  <span style={{ fontSize: 12, color: '#94a3b8' }}>Rating: 1400</span>
-                </div>
-
-                <div className="panel-body">
-                  <div className="meta-stats">
-                    <span>Time limit: 2.0s</span>
-                    <span>•</span>
-                    <span>Memory limit: 256MB</span>
-                    <span>•</span>
-                    <span>Standard I/O</span>
-                  </div>
-
-                  <p>
-                    A permutation <i style={{ fontFamily: 'KaTeX_Math, "Times New Roman", serif', fontSize: '15px' }}>p</i> of length <i style={{ fontFamily: 'KaTeX_Math, "Times New Roman", serif', fontSize: '15px' }}>n</i> is an array containing each integer from <span style={{ fontFamily: 'KaTeX_Main, "Times New Roman", serif' }}>1</span> to <i style={{ fontFamily: 'KaTeX_Math, "Times New Roman", serif', fontSize: '15px' }}>n</i> exactly once.
-                    The <em>Manhattan value</em> of a permutation <i style={{ fontFamily: 'KaTeX_Math, "Times New Roman", serif', fontSize: '15px' }}>p</i> is defined as:
-                  </p>
-
-                  <div
-                    style={{
-                      padding: '12px 18px',
-                      background: 'rgba(255, 255, 255, 0.04)',
-                      borderRadius: 8,
-                      fontFamily: '"Times New Roman", Cambria, serif',
-                      fontSize: 18,
-                      letterSpacing: '0.04em',
-                      textAlign: 'center',
-                      color: config.accentColor,
-                    }}
-                  >
-                    <i>S</i>(<i>p</i>) = <span style={{ fontSize: '20px' }}>&sum;</span><sub style={{ fontSize: '11px' }}><i>i</i>=1</sub><sup style={{ fontSize: '11px' }}><i>n</i></sup> |<i>p</i><sub><i>i</i></sub> &minus; <i>i</i>|
-                  </div>
-
-                  <p>
-                    Given <i style={{ fontFamily: 'KaTeX_Math, "Times New Roman", serif', fontSize: '15px' }}>n</i> and <i style={{ fontFamily: 'KaTeX_Math, "Times New Roman", serif', fontSize: '15px' }}>k</i>, determine if there exists a permutation <i style={{ fontFamily: 'KaTeX_Math, "Times New Roman", serif', fontSize: '15px' }}>p</i> of length <i style={{ fontFamily: 'KaTeX_Math, "Times New Roman", serif', fontSize: '15px' }}>n</i> such that <i>S</i>(<i>p</i>) = <i>k</i>.
-                    If such a permutation exists, output <code style={{ color: config.accentColor, fontWeight: 600 }}>Yes</code> followed by the permutation.
-                  </p>
-
-                  <div className="sample-box">
-                    <div className="sample-head">
-                      <span>Sample 1 Input</span>
-                      <button
-                        onClick={handleCopySample}
+            {/* LEETCODE PREVIEW */}
+            {previewPlatform === 'leetcode' && (
+              <div className="preview-workbench">
+                {/* LeetCode Description Card */}
+                <div
+                  className="preview-panel"
+                  style={{
+                    backgroundColor: previewCardBg,
+                    backdropFilter: 'blur(16px)',
+                    color: previewTextPrimary,
+                  }}
+                >
+                  <div className="panel-header-bar">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <h2 style={{ color: config.accentColor }}>1. Two Sum</h2>
+                      <span
                         style={{
-                          background: 'none',
-                          border: 'none',
-                          color: copied ? '#4ade80' : '#94a3b8',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 4,
                           fontSize: 11,
+                          fontWeight: 600,
+                          color: '#4ade80',
+                          background: 'rgba(74, 222, 128, 0.15)',
+                          padding: '2px 8px',
+                          borderRadius: 9999,
                         }}
                       >
-                        <Copy size={11} />
-                        <span>{copied ? 'Copied' : 'Copy'}</span>
-                      </button>
+                        Easy
+                      </span>
                     </div>
-                    <pre className="sample-code" style={{ fontFamily: `'${config.fontFamily}', monospace` }}>
-                      4{"\n"}1 2 4 3
-                    </pre>
+                    <span style={{ fontSize: 12, color: '#4ade80', display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <Check size={13} /> Solved
+                    </span>
+                  </div>
+
+                  <div className="panel-body">
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <span style={{ fontSize: 11, background: 'rgba(255, 255, 255, 0.06)', padding: '2px 8px', borderRadius: 4 }}>
+                        Array
+                      </span>
+                      <span style={{ fontSize: 11, background: 'rgba(255, 255, 255, 0.06)', padding: '2px 8px', borderRadius: 4 }}>
+                        Hash Table
+                      </span>
+                    </div>
+
+                    <p>
+                      Given an array of integers <code style={{ color: config.accentColor }}>nums</code> and an integer <code style={{ color: config.accentColor }}>target</code>, return <em>indices of the two numbers such that they add up to target</em>.
+                    </p>
+
+                    <p>
+                      You may assume that each input would have <strong>exactly one solution</strong>, and you may not use the <em>same</em> element twice.
+                    </p>
+
+                    <div className="sample-box">
+                      <div className="sample-head">
+                        <span>Example 1</span>
+                        <button
+                          onClick={handleCopySample}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: copied ? '#4ade80' : '#94a3b8',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 4,
+                            fontSize: 11,
+                          }}
+                        >
+                          <Copy size={11} />
+                          <span>{copied ? 'Copied' : 'Copy'}</span>
+                        </button>
+                      </div>
+                      <pre className="sample-code" style={{ fontFamily: `'${config.fontFamily}', monospace` }}>
+Input: nums = [2,7,11,15], target = 9{"\n"}
+Output: [0,1]{"\n"}
+Explanation: Because nums[0] + nums[1] == 9, we return [0, 1].
+                      </pre>
+                    </div>
+                  </div>
+                </div>
+
+                {/* LeetCode Monaco Code Editor Card */}
+                <div
+                  className="preview-panel"
+                  style={{
+                    backgroundColor: previewCardBg,
+                    backdropFilter: 'blur(16px)',
+                  }}
+                >
+                  <div className="editor-tabs">
+                    <div
+                      className="editor-tab active"
+                      style={{
+                        borderBottomColor: config.accentColor,
+                        color: config.accentColor,
+                      }}
+                    >
+                      <Code2 size={13} />
+                      <span>Solution.cpp</span>
+                    </div>
+                    <span style={{ fontSize: 11, color: '#64748b', marginLeft: 'auto' }}>
+                      C++ • Auto
+                    </span>
+                  </div>
+
+                  <div className="code-editor-box">
+                    <div
+                      className="editor-content-area"
+                      style={{ fontFamily: `'${config.fontFamily}', monospace` }}
+                    >
+                      <div className="line-numbers">
+                        {Array.from({ length: 15 }, (_, i) => (
+                          <div key={i + 1}>{i + 1}</div>
+                        ))}
+                      </div>
+
+                      <div className="code-lines">
+                        <div><span className="code-keyword">class</span> <span className="code-type">Solution</span> &#123;</div>
+                        <div><span className="code-keyword">public</span>:</div>
+                        <div>    <span className="code-type">vector&lt;int&gt;</span> <span className="code-fn">twoSum</span>(<span className="code-type">vector&lt;int&gt;&amp;</span> nums, <span className="code-type">int</span> target) &#123;</div>
+                        <div>        <span className="code-type">unordered_map&lt;int, int&gt;</span> seen;</div>
+                        <div>        <span className="code-keyword">for</span> (<span className="code-type">int</span> i = <span className="code-num">0</span>; i &lt; nums.size(); ++i) &#123;</div>
+                        <div>            <span className="code-type">int</span> comp = target - nums[i];</div>
+                        <div>            <span className="code-keyword">if</span> (seen.count(comp)) &#123;</div>
+                        <div>                <span className="code-keyword">return</span> &#123;seen[comp], i&#125;;</div>
+                        <div>            &#125;</div>
+                        <div>            seen[nums[i]] = i;</div>
+                        <div>        &#125;</div>
+                        <div>        <span className="code-keyword">return</span> &#123;&#125;;</div>
+                        <div>    &#125;</div>
+                        <div>&#125;;</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
+            )}
 
-              {/* Code Editor Preview Panel */}
-              <div
-                className="preview-panel"
-                style={{
-                  backgroundColor: previewCardBg,
-                  backdropFilter: 'blur(16px)',
-                }}
-              >
-                <div className="editor-tabs">
-                  <div
-                    className="editor-tab active"
-                    style={{
-                      borderBottomColor: config.accentColor,
-                      color: config.accentColor,
-                    }}
-                  >
-                    <Code2 size={13} />
-                    <span>solution.cpp</span>
+            {/* CODEFORCES PREVIEW */}
+            {previewPlatform === 'codeforces' && (
+              <div className="preview-workbench">
+                {/* Problem Statement Card */}
+                <div
+                  className="preview-panel"
+                  style={{
+                    backgroundColor: previewCardBg,
+                    backdropFilter: 'blur(16px)',
+                    color: previewTextPrimary,
+                  }}
+                >
+                  <div className="panel-header-bar">
+                    <h2 style={{ color: config.accentColor }}>D. Manhattan Permutations</h2>
+                    <span style={{ fontSize: 12, color: '#94a3b8' }}>Rating: 1400</span>
                   </div>
-                  <span style={{ fontSize: 11, color: '#64748b', marginLeft: 'auto' }}>
-                    C++20 (GCC 13-64)
-                  </span>
-                </div>
 
-                <div className="code-editor-box">
-                  <div
-                    className="editor-content-area"
-                    style={{ fontFamily: `'${config.fontFamily}', monospace` }}
-                  >
-                    <div className="line-numbers">
-                      {Array.from({ length: 18 }, (_, i) => (
-                        <div key={i + 1}>{i + 1}</div>
-                      ))}
+                  <div className="panel-body">
+                    <div className="meta-stats">
+                      <span>Time limit: 2.0s</span>
+                      <span>•</span>
+                      <span>Memory limit: 256MB</span>
+                      <span>•</span>
+                      <span>Standard I/O</span>
                     </div>
 
-                    <div className="code-lines">
-                      <div><span className="code-keyword">#include</span> <span className="code-string">&lt;bits/stdc++.h&gt;</span></div>
-                      <div><span className="code-keyword">using namespace</span> std;</div>
-                      <div>&nbsp;</div>
-                      <div><span className="code-type">void</span> <span className="code-fn">solve</span>() &#123;</div>
-                      <div>    <span className="code-type">long long</span> n, k;</div>
-                      <div>    cin &gt;&gt; n &gt;&gt; k;</div>
-                      <div>    <span className="code-comment">// Manhattan value must be even</span></div>
-                      <div>    <span className="code-keyword">if</span> (k % <span className="code-num">2</span> != <span className="code-num">0</span>) &#123;</div>
-                      <div>        cout &lt;&lt; <span className="code-string">"No\n"</span>;</div>
-                      <div>        <span className="code-keyword">return</span>;</div>
-                      <div>    &#125;</div>
-                      <div>    vector&lt;<span className="code-type">int</span>&gt; p(n + <span className="code-num">1</span>);</div>
-                      <div>    iota(p.begin(), p.end(), <span className="code-num">0</span>);</div>
-                      <div>    <span className="code-comment">// Construct maximal swaps</span></div>
-                      <div>    cout &lt;&lt; <span className="code-string">"Yes\n"</span>;</div>
-                      <div>&#125;</div>
+                    <p>
+                      A permutation <i style={{ fontFamily: 'KaTeX_Math, "Times New Roman", serif', fontSize: '15px' }}>p</i> of length <i style={{ fontFamily: 'KaTeX_Math, "Times New Roman", serif', fontSize: '15px' }}>n</i> is an array containing each integer from <span style={{ fontFamily: 'KaTeX_Main, "Times New Roman", serif' }}>1</span> to <i style={{ fontFamily: 'KaTeX_Math, "Times New Roman", serif', fontSize: '15px' }}>n</i> exactly once.
+                      The <em>Manhattan value</em> of a permutation <i style={{ fontFamily: 'KaTeX_Math, "Times New Roman", serif', fontSize: '15px' }}>p</i> is defined as:
+                    </p>
+
+                    <div
+                      style={{
+                        padding: '12px 18px',
+                        background: 'rgba(255, 255, 255, 0.04)',
+                        borderRadius: 8,
+                        fontFamily: '"Times New Roman", Cambria, serif',
+                        fontSize: 18,
+                        letterSpacing: '0.04em',
+                        textAlign: 'center',
+                        color: config.accentColor,
+                      }}
+                    >
+                      <i>S</i>(<i>p</i>) = <span style={{ fontSize: '20px' }}>&sum;</span><sub style={{ fontSize: '11px' }}><i>i</i>=1</sub><sup style={{ fontSize: '11px' }}><i>n</i></sup> |<i>p</i><sub><i>i</i></sub> &minus; <i>i</i>|
+                    </div>
+
+                    <p>
+                      Given <i style={{ fontFamily: 'KaTeX_Math, "Times New Roman", serif', fontSize: '15px' }}>n</i> and <i style={{ fontFamily: 'KaTeX_Math, "Times New Roman", serif', fontSize: '15px' }}>k</i>, determine if there exists a permutation <i style={{ fontFamily: 'KaTeX_Math, "Times New Roman", serif', fontSize: '15px' }}>p</i> of length <i style={{ fontFamily: 'KaTeX_Math, "Times New Roman", serif', fontSize: '15px' }}>n</i> such that <i>S</i>(<i>p</i>) = <i>k</i>.
+                      If such a permutation exists, output <code style={{ color: config.accentColor, fontWeight: 600 }}>Yes</code> followed by the permutation.
+                    </p>
+
+                    <div className="sample-box">
+                      <div className="sample-head">
+                        <span>Sample 1 Input</span>
+                        <button
+                          onClick={handleCopySample}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: copied ? '#4ade80' : '#94a3b8',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 4,
+                            fontSize: 11,
+                          }}
+                        >
+                          <Copy size={11} />
+                          <span>{copied ? 'Copied' : 'Copy'}</span>
+                        </button>
+                      </div>
+                      <pre className="sample-code" style={{ fontFamily: `'${config.fontFamily}', monospace` }}>
+                        4{"\n"}1 2 4 3
+                      </pre>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Code Editor Preview Panel */}
+                <div
+                  className="preview-panel"
+                  style={{
+                    backgroundColor: previewCardBg,
+                    backdropFilter: 'blur(16px)',
+                  }}
+                >
+                  <div className="editor-tabs">
+                    <div
+                      className="editor-tab active"
+                      style={{
+                        borderBottomColor: config.accentColor,
+                        color: config.accentColor,
+                      }}
+                    >
+                      <Code2 size={13} />
+                      <span>solution.cpp</span>
+                    </div>
+                    <span style={{ fontSize: 11, color: '#64748b', marginLeft: 'auto' }}>
+                      C++20 (GCC 13-64)
+                    </span>
+                  </div>
+
+                  <div className="code-editor-box">
+                    <div
+                      className="editor-content-area"
+                      style={{ fontFamily: `'${config.fontFamily}', monospace` }}
+                    >
+                      <div className="line-numbers">
+                        {Array.from({ length: 18 }, (_, i) => (
+                          <div key={i + 1}>{i + 1}</div>
+                        ))}
+                      </div>
+
+                      <div className="code-lines">
+                        <div><span className="code-keyword">#include</span> <span className="code-string">&lt;bits/stdc++.h&gt;</span></div>
+                        <div><span className="code-keyword">using namespace</span> std;</div>
+                        <div>&nbsp;</div>
+                        <div><span className="code-type">void</span> <span className="code-fn">solve</span>() &#123;</div>
+                        <div>    <span className="code-type">long long</span> n, k;</div>
+                        <div>    cin &gt;&gt; n &gt;&gt; k;</div>
+                        <div>    <span className="code-comment">// Manhattan value must be even</span></div>
+                        <div>    <span className="code-keyword">if</span> (k % <span className="code-num">2</span> != <span className="code-num">0</span>) &#123;</div>
+                        <div>        cout &lt;&lt; <span className="code-string">"No\n"</span>;</div>
+                        <div>        <span className="code-keyword">return</span>;</div>
+                        <div>    &#125;</div>
+                        <div>    vector&lt;<span className="code-type">int</span>&gt; p(n + <span className="code-num">1</span>);</div>
+                        <div>    iota(p.begin(), p.end(), <span className="code-num">0</span>);</div>
+                        <div>    <span className="code-comment">// Construct maximal swaps</span></div>
+                        <div>    cout &lt;&lt; <span className="code-string">"Yes\n"</span>;</div>
+                        <div>&#125;</div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Bottom Clarification */}
             <div className="disclaimer-banner">
-              Interactive Studio Preview • Real-time theme customization for Codeforces • Changes persist automatically
+              Interactive Studio Preview • Real-time theme customization for LeetCode & Codeforces • Changes persist automatically
             </div>
           </div>
         </main>

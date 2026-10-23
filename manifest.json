@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "ThemeFlow — Codeforces Theme Studio",
-  "version": "1.0.0",
-  "description": "Premium theme studio and visual customizer for Codeforces. Atmospheric wallpapers, dark mode, smooth glassmorphism, and verdict celebrations.",
+  "name": "ThemeFlow — Codeforces & LeetCode Theme Studio",
+  "version": "1.1.0",
+  "description": "Premium theme studio and visual customizer for Codeforces and LeetCode. Atmospheric wallpapers, dark mode, smooth glassmorphism, and verdict celebrations.",
   "icons": {
     "16": "icons/icon16.png",
     "32": "icons/icon32.png",
@@ -25,13 +25,29 @@
     "type": "module"
   },
   "permissions": [
-    "storage"
+    "storage",
+    "tabs"
   ],
   "host_permissions": [
+    "*://leetcode.com/*",
+    "*://*.leetcode.com/*",
     "*://codeforces.com/*",
     "*://*.codeforces.com/*"
   ],
   "content_scripts": [
+    {
+      "matches": [
+        "*://leetcode.com/*",
+        "*://*.leetcode.com/*"
+      ],
+      "css": [
+        "leetcode.css"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_start"
+    },
     {
       "matches": [
         "*://codeforces.com/*",
@@ -53,9 +69,12 @@
         "thumbnails/*",
         "icons/*",
         "sounds/*",
-        "codeforces.css"
+        "codeforces.css",
+        "leetcode.css"
       ],
       "matches": [
+        "*://leetcode.com/*",
+        "*://*.leetcode.com/*",
         "*://codeforces.com/*",
         "*://*.codeforces.com/*"
       ]

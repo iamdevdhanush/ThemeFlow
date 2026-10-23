@@ -61,9 +61,10 @@ async function buildExtension() {
   fs.copyFileSync('manifest.json', 'dist/manifest.json');
   console.log('Copied manifest.json');
 
-  // Copy codeforces.css
+  // Copy codeforces.css and leetcode.css
   fs.copyFileSync('src/content/codeforces.css', 'dist/codeforces.css');
-  console.log('Copied codeforces.css');
+  fs.copyFileSync('src/platforms/leetcode/leetcode.css', 'dist/leetcode.css');
+  console.log('Copied codeforces.css and leetcode.css');
 
   // Copy IMAGES folder to dist/IMAGES
   const distImagesDir = path.resolve('dist/IMAGES');

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Palette, Check, Sparkles, ExternalLink, Sliders } from 'lucide-react';
-import { UserSettings, ThemeConfig } from '../types/theme';
+import { Check, Sparkles, ExternalLink, Sliders, Globe } from 'lucide-react';
+import { UserSettings } from '../types/theme';
+import { SupportedPlatform, detectPlatformFromUrl } from '../types/platform';
 import { THEME_PRESETS, presetToConfig, DEFAULT_USER_SETTINGS } from '../themes/presets';
 import { getSettings, saveSettings } from '../storage/storage';
 import './Popup.css';
@@ -8,12 +9,25 @@ import './Popup.css';
 export const Popup: React.FC = () => {
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_USER_SETTINGS);
   const [loading, setLoading] = useState(true);
+  const [platform, setPlatform] = useState<SupportedPlatform>('unknown');
 
   useEffect(() => {
     getSettings().then((loaded) => {
       setSettings(loaded);
       setLoading(false);
     });
+
+    // Detect current active tab platform
+    if (typeof chrome !== 'undefined' && chrome.tabs && chrome.tabs.query) {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (tabs && tabs[0]?.url) {
+          const detected = detectPlatformFromUrl(tabs[0].url);
+          setPlatform(detected);
+        }
+      });
+    } else if (typeof window !== 'undefined') {
+      setPlatform(detectPlatformFromUrl(window.location.href));
+    }
   }, []);
 
   const handleToggleEnabled = async () => {
@@ -68,7 +82,7 @@ export const Popup: React.FC = () => {
           </div>
           <div className="header-titles">
             <h1>ThemeFlow</h1>
-            <p>Codeforces Visual Studio</p>
+            <p>Codeforces & LeetCode</p>
           </div>
         </div>
 
@@ -81,6 +95,29 @@ export const Popup: React.FC = () => {
           <span className="slider"></span>
         </label>
       </header>
+
+      {/* Platform Status Banner */}
+      <div className="platform-banner">
+        <div className="platform-banner-left">
+          <Globe size={13} />
+          <span className="platform-label">Platform:</span>
+          {platform === 'leetcode' && (
+            <span className={`platform-badge leetcode ${settings.enabled ? 'active' : 'paused'}`}>
+              LeetCode • {settings.enabled ? 'Active' : 'Paused'}
+            </span>
+          )}
+          {platform === 'codeforces' && (
+            <span className={`platform-badge codeforces ${settings.enabled ? 'active' : 'paused'}`}>
+              Codeforces • {settings.enabled ? 'Active' : 'Paused'}
+            </span>
+          )}
+          {platform === 'unknown' && (
+            <span className="platform-badge neutral">
+              Universal Studio Ready
+            </span>
+          )}
+        </div>
+      </div>
 
       {/* Main Theme Selection Cards */}
       <main className="popup-content">

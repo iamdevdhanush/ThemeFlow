@@ -1,0 +1,147 @@
+/* ThemeFlow LeetCode Scoped Stylesheet */
+
+:root {
+  --tf-accent: #a78bfa;
+  --tf-accent-glow: rgba(167, 139, 250, 0.35);
+  --tf-bg-card: rgba(18, 18, 26, 0.82);
+  --tf-bg-card-hover: rgba(26, 26, 38, 0.9);
+  --tf-border-color: rgba(255, 255, 255, 0.08);
+  --tf-text-primary: #f3f4f6;
+  --tf-text-secondary: #9ca3af;
+  --tf-code-font: 'JetBrains Mono', Consolas, 'Courier New', monospace;
+}
+
+/* LeetCode Base and Container Overrides */
+html.themeflow-leetcode,
+body.themeflow-leetcode {
+  background-color: transparent !important;
+  background-image: none !important;
+  color: var(--tf-text-primary) !important;
+}
+
+body.themeflow-leetcode #__next,
+body.themeflow-leetcode main {
+  background-color: transparent !important;
+}
+
+/* LeetCode CSS variable overrides */
+body.themeflow-leetcode {
+  --layer-bg: transparent !important;
+  --layer-0: transparent !important;
+  --layer-1: var(--tf-bg-card) !important;
+  --layer-2: var(--tf-bg-card) !important;
+  --layer-3: rgba(255, 255, 255, 0.05) !important;
+  --bg-overlay-1: var(--tf-bg-card) !important;
+  --bg-overlay-2: var(--tf-bg-card) !important;
+  --bg-overlay-3: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Navbar */
+body.themeflow-leetcode nav,
+body.themeflow-leetcode #navbar,
+body.themeflow-leetcode header {
+  background: var(--tf-bg-card) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border-bottom: 1px solid var(--tf-border-color) !important;
+}
+
+/* Workbench Panes & Split Layout */
+body.themeflow-leetcode div[data-layout-path],
+body.themeflow-leetcode div[class*="bg-layer-1"],
+body.themeflow-leetcode div[class*="bg-layer-2"],
+body.themeflow-leetcode div[class*="bg-fill-2"],
+body.themeflow-leetcode div[class*="bg-fill-3"] {
+  background: var(--tf-bg-card) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border: 1px solid var(--tf-border-color) !important;
+}
+
+/* Monaco Code Editor */
+body.themeflow-leetcode .monaco-editor,
+body.themeflow-leetcode .monaco-editor-background {
+  background: rgba(14, 14, 20, 0.88) !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+body.themeflow-leetcode .monaco-editor .margin,
+body.themeflow-leetcode .monaco-editor .glyph-margin {
+  background: rgba(10, 10, 15, 0.92) !important;
+  border-right: 1px solid var(--tf-border-color) !important;
+}
+
+body.themeflow-leetcode .monaco-editor .line-numbers {
+  color: #64748b !important;
+}
+
+/* Problem Description & Content */
+body.themeflow-leetcode div[data-track-load="description_content"],
+body.themeflow-leetcode .elfjS {
+  color: var(--tf-text-primary) !important;
+  line-height: 1.65 !important;
+}
+
+body.themeflow-leetcode h4[class*="text-title"],
+body.themeflow-leetcode div[class*="text-title"] {
+  color: var(--tf-accent) !important;
+  text-shadow: 0 0 16px var(--tf-accent-glow) !important;
+}
+
+/* Code Blocks & Examples */
+body.themeflow-leetcode pre,
+body.themeflow-leetcode code,
+body.themeflow-leetcode .example-block,
+body.themeflow-leetcode div[class*="example-block"] {
+  background: rgba(10, 10, 16, 0.88) !important;
+  border: 1px solid var(--tf-border-color) !important;
+  border-radius: 8px !important;
+  color: #38bdf8 !important;
+  font-family: var(--tf-code-font) !important;
+}
+
+/* Difficulty Badges */
+body.themeflow-leetcode .text-olive,
+body.themeflow-leetcode [class*="text-olive"],
+body.themeflow-leetcode .text-easy {
+  color: #4ade80 !important;
+}
+
+body.themeflow-leetcode .text-yellow,
+body.themeflow-leetcode [class*="text-yellow"],
+body.themeflow-leetcode .text-medium {
+  color: #fbbf24 !important;
+}
+
+body.themeflow-leetcode .text-pink,
+body.themeflow-leetcode [class*="text-pink"],
+body.themeflow-leetcode .text-red,
+body.themeflow-leetcode [class*="text-red"],
+body.themeflow-leetcode .text-hard {
+  color: #f87171 !important;
+}
+
+/* Problemset List & Tables */
+body.themeflow-leetcode [role="row"],
+body.themeflow-leetcode div[role="table"] {
+  border-color: var(--tf-border-color) !important;
+}
+
+body.themeflow-leetcode [role="row"]:hover {
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+
+/* Verdict Results */
+body.themeflow-leetcode [data-e2e-locator="submission-result"],
+body.themeflow-leetcode .text-green-s,
+body.themeflow-leetcode [class*="text-green-s"] {
+  color: #4ade80 !important;
+  font-weight: 700 !important;
+  text-shadow: 0 0 12px rgba(74, 222, 128, 0.45) !important;
+}
+
+body.themeflow-leetcode .text-red-s,
+body.themeflow-leetcode [class*="text-red-s"] {
+  color: #f87171 !important;
+  font-weight: 700 !important;
+}
