@@ -49,8 +49,37 @@ async function initMultiPlatform() {
   });
 }
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initMultiPlatform);
-} else {
-  initMultiPlatform();
+function runWhenReady(fn: () => void) {
+  if (document.body) {
+    fn();
+    return;
+  }
+
+  const handleReady = () => {
+    if (document.body) {
+      document.removeEventListener('DOMContentLoaded', handleReady);
+      fn();
+    }
+  };
+
+  document.addEventListener('DOMContentLoaded', handleReady);
+
+  // Fallback observer in case DOMContentLoaded has already passed or body is attached dynamically
+  const observer = new MutationObserver(() => {
+    if (document.body) {
+      observer.disconnect();
+      document.removeEventListener('DOMContentLoaded', handleReady);
+      fn();
+    }
+  });
+
+  if (document.documentElement) {
+    observer.observe(document.documentElement, { childList: true });
+  }
 }
+
+runWhenReady(() => {
+  initMultiPlatform().catch((err) => {
+    console.error('[ThemeFlow] Initialization error:', err);
+  });
+});

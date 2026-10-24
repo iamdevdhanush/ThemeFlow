@@ -86,10 +86,11 @@ export const Studio: React.FC = () => {
         }
       }
       if (active) {
+        const cleanPath = (config.imagePath || '').replace(/^[\\/]+/, '').replace(/^\.\//, '') || 'IMAGES/galaxy.jpg';
         if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.getURL) {
-          setPreviewBgUrl(chrome.runtime.getURL(config.imagePath));
+          setPreviewBgUrl(chrome.runtime.getURL(cleanPath));
         } else {
-          setPreviewBgUrl('/' + config.imagePath);
+          setPreviewBgUrl('/' + cleanPath);
         }
       }
     }

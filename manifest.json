@@ -66,6 +66,8 @@
     {
       "resources": [
         "IMAGES/*",
+        "images/*",
+        "Images/*",
         "thumbnails/*",
         "icons/*",
         "sounds/*",

@@ -66,16 +66,22 @@ async function buildExtension() {
   fs.copyFileSync('src/platforms/leetcode/leetcode.css', 'dist/leetcode.css');
   console.log('Copied codeforces.css and leetcode.css');
 
-  // Copy IMAGES folder to dist/IMAGES
+  // Copy IMAGES folder to dist/IMAGES and dist/images
   const distImagesDir = path.resolve('dist/IMAGES');
+  const distImagesDirLower = path.resolve('dist/images');
   if (!fs.existsSync(distImagesDir)) {
     fs.mkdirSync(distImagesDir, { recursive: true });
   }
+  if (!fs.existsSync(distImagesDirLower)) {
+    fs.mkdirSync(distImagesDirLower, { recursive: true });
+  }
   const imageFiles = fs.readdirSync('IMAGES');
   for (const file of imageFiles) {
-    fs.copyFileSync(path.join('IMAGES', file), path.join(distImagesDir, file));
+    const src = path.join('IMAGES', file);
+    fs.copyFileSync(src, path.join(distImagesDir, file));
+    fs.copyFileSync(src, path.join(distImagesDirLower, file));
   }
-  console.log(`Copied ${imageFiles.length} original images to dist/IMAGES`);
+  console.log(`Copied ${imageFiles.length} original images to dist/IMAGES and dist/images`);
 
   // Ensure public assets (thumbnails, icons, sounds) are copied to dist/
   const publicDir = path.resolve('public');

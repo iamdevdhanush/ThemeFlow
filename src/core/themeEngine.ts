@@ -12,9 +12,9 @@ export class ThemeEngine {
   }
 
   private ensureLayers(): { bgLayer: HTMLElement; overlayLayer: HTMLElement } {
-    const target = document.body || document.documentElement;
+    const target = document.body;
 
-    if (!this.bgLayer) {
+    if (!this.bgLayer || !this.bgLayer.parentNode) {
       this.bgLayer = document.getElementById('themeflow-bg-layer');
       if (!this.bgLayer && target) {
         this.bgLayer = document.createElement('div');
@@ -23,7 +23,7 @@ export class ThemeEngine {
       }
     }
 
-    if (!this.overlayLayer) {
+    if (!this.overlayLayer || !this.overlayLayer.parentNode) {
       this.overlayLayer = document.getElementById('themeflow-overlay-layer');
       if (!this.overlayLayer && target) {
         this.overlayLayer = document.createElement('div');
@@ -42,13 +42,18 @@ export class ThemeEngine {
     if (config.isCustom && config.id) {
       const dbUrl = await getCustomImageFromDB(config.id);
       if (dbUrl) return dbUrl;
-      if (config.imagePath.startsWith('data:')) return config.imagePath;
+      if (config.imagePath && config.imagePath.startsWith('data:')) return config.imagePath;
+    }
+
+    let cleanPath = (config.imagePath || '').replace(/^[\\/]+/, '').replace(/^\.\//, '');
+    if (!cleanPath) {
+      cleanPath = 'IMAGES/galaxy.jpg';
     }
 
     if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.getURL) {
-      return chrome.runtime.getURL(config.imagePath);
+      return chrome.runtime.getURL(cleanPath);
     }
-    return config.imagePath.startsWith('/') ? config.imagePath : '/' + config.imagePath;
+    return '/' + cleanPath;
   }
 
   public async apply(settings: UserSettings, platformClass: string): Promise<void> {
@@ -71,42 +76,42 @@ export class ThemeEngine {
     const config = settings.currentConfig;
     const root = document.documentElement;
 
-    // Calculate coordinated surface colors based on user mode and overlay settings
-    let overlayColor = `rgba(10, 10, 16, ${config.overlayOpacity})`;
-    let panelBg = `rgba(20, 20, 28, ${config.cardGlassOpacity})`;
-    let panelSecondary = `rgba(15, 15, 22, ${Math.min(0.95, config.cardGlassOpacity + 0.08)})`;
-    let editorBg = `rgba(13, 13, 19, ${Math.max(0.88, config.cardGlassOpacity)})`;
-    let toolbarBg = `rgba(18, 18, 25, ${config.cardGlassOpacity})`;
+    // Calculate balanced coordinated surface colors for glassmorphic depth & contrast
+    let overlayColor = `rgba(10, 10, 16, ${Math.min(0.85, config.overlayOpacity * 0.7)})`;
+    let panelBg = `rgba(18, 18, 26, ${Math.min(0.85, config.cardGlassOpacity * 0.85)})`;
+    let panelSecondary = `rgba(14, 14, 20, ${Math.min(0.90, config.cardGlassOpacity * 0.90)})`;
+    let editorBg = `rgba(12, 12, 18, ${Math.min(0.92, config.cardGlassOpacity * 0.92)})`;
+    let toolbarBg = `rgba(16, 16, 24, ${Math.min(0.85, config.cardGlassOpacity * 0.85)})`;
     let textPrimary = '#f3f4f6';
     let textSecondary = '#9ca3af';
     let border = 'rgba(255, 255, 255, 0.08)';
 
     if (config.mode === 'midnight') {
-      overlayColor = `rgba(0, 0, 0, ${Math.max(0.85, config.overlayOpacity)})`;
-      panelBg = `rgba(8, 8, 12, ${Math.max(0.9, config.cardGlassOpacity)})`;
-      panelSecondary = `rgba(5, 5, 8, ${Math.max(0.94, config.cardGlassOpacity)})`;
-      editorBg = `rgba(6, 6, 9, 0.96)`;
-      toolbarBg = `rgba(9, 9, 13, 0.94)`;
+      overlayColor = `rgba(0, 0, 0, ${Math.max(0.75, config.overlayOpacity * 0.85)})`;
+      panelBg = `rgba(8, 8, 12, 0.88)`;
+      panelSecondary = `rgba(5, 5, 8, 0.92)`;
+      editorBg = `rgba(6, 6, 9, 0.94)`;
+      toolbarBg = `rgba(9, 9, 13, 0.90)`;
       border = 'rgba(255, 255, 255, 0.06)';
     } else if (config.mode === 'glass') {
-      overlayColor = `rgba(15, 15, 25, ${config.overlayOpacity * 0.75})`;
-      panelBg = `rgba(22, 22, 34, ${config.cardGlassOpacity * 0.75})`;
-      panelSecondary = `rgba(18, 18, 28, ${config.cardGlassOpacity * 0.8})`;
-      editorBg = `rgba(14, 14, 22, ${Math.max(0.82, config.cardGlassOpacity * 0.85)})`;
-      toolbarBg = `rgba(20, 20, 30, ${config.cardGlassOpacity * 0.75})`;
+      overlayColor = `rgba(12, 12, 20, ${config.overlayOpacity * 0.5})`;
+      panelBg = `rgba(20, 20, 32, 0.65)`;
+      panelSecondary = `rgba(16, 16, 26, 0.72)`;
+      editorBg = `rgba(14, 14, 22, 0.78)`;
+      toolbarBg = `rgba(18, 18, 28, 0.68)`;
       border = 'rgba(255, 255, 255, 0.12)';
     } else if (config.mode === 'light') {
-      overlayColor = `rgba(240, 242, 245, ${config.overlayOpacity * 0.9})`;
-      panelBg = `rgba(255, 255, 255, ${config.cardGlassOpacity * 0.9})`;
-      panelSecondary = `rgba(248, 249, 251, 0.95)`;
-      editorBg = `rgba(255, 255, 255, 0.96)`;
-      toolbarBg = `rgba(245, 247, 250, 0.92)`;
+      overlayColor = `rgba(240, 242, 245, ${config.overlayOpacity * 0.85})`;
+      panelBg = `rgba(255, 255, 255, 0.88)`;
+      panelSecondary = `rgba(248, 249, 251, 0.92)`;
+      editorBg = `rgba(255, 255, 255, 0.95)`;
+      toolbarBg = `rgba(245, 247, 250, 0.90)`;
       textPrimary = '#111827';
       textSecondary = '#4b5563';
       border = 'rgba(0, 0, 0, 0.08)';
     }
 
-    // Standard ThemeFlow Custom Properties (Section 4 Specification)
+    // Standard ThemeFlow Custom Properties
     root.style.setProperty('--tf-page-bg', 'transparent');
     root.style.setProperty('--tf-panel-bg', panelBg);
     root.style.setProperty('--tf-panel-secondary', panelSecondary);
@@ -125,11 +130,21 @@ export class ThemeEngine {
     root.style.setProperty('--tf-bg-card', panelBg);
     root.style.setProperty('--tf-border-color', border);
 
-    // Apply background image and filters
+    // Apply background image and filters with fallback verification
     const imgUrl = await this.resolveImageUrl(config);
     bgLayer.style.backgroundImage = `url("${imgUrl}")`;
     bgLayer.style.filter = `brightness(${config.brightness}%) contrast(${config.contrast}%) blur(${config.blur}px)`;
     overlayLayer.style.backgroundColor = overlayColor;
+
+    // Verify image loading; if broken, cleanly fallback to default preset image
+    const preloader = new Image();
+    preloader.onerror = () => {
+      console.warn(`[ThemeFlow] Wallpaper failed to load: ${imgUrl}. Using fallback.`);
+      if (typeof chrome !== 'undefined' && chrome.runtime?.getURL) {
+        bgLayer.style.backgroundImage = `url("${chrome.runtime.getURL('IMAGES/galaxy.jpg')}")`;
+      }
+    };
+    preloader.src = imgUrl;
 
     // Visual effect
     this.effectManager.setEffect(config.effect);

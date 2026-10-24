@@ -123,6 +123,8 @@ export class LeetCodeAdapter {
       });
     });
 
+    if (!document.body) return;
+
     this.observer.observe(document.body, {
       childList: true,
       subtree: true,
@@ -131,6 +133,8 @@ export class LeetCodeAdapter {
   }
 
   private renderQuickPill(config: ThemeConfig): void {
+    if (!document.body) return;
+
     if (!this.quickPill) {
       this.quickPill = document.createElement('div');
       this.quickPill.id = 'themeflow-quick-pill';
@@ -144,7 +148,7 @@ export class LeetCodeAdapter {
     }
 
     this.quickPill.innerHTML = `
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="10"></circle>
         <path d="m4.93 4.93 4.24 4.24"></path>
         <path d="m14.83 9.17 4.24-4.24"></path>
