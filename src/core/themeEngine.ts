@@ -12,25 +12,30 @@ export class ThemeEngine {
   }
 
   private ensureLayers(): { bgLayer: HTMLElement; overlayLayer: HTMLElement } {
+    const target = document.body || document.documentElement;
+
     if (!this.bgLayer) {
       this.bgLayer = document.getElementById('themeflow-bg-layer');
-      if (!this.bgLayer) {
+      if (!this.bgLayer && target) {
         this.bgLayer = document.createElement('div');
         this.bgLayer.id = 'themeflow-bg-layer';
-        document.body.prepend(this.bgLayer);
+        target.prepend(this.bgLayer);
       }
     }
 
     if (!this.overlayLayer) {
       this.overlayLayer = document.getElementById('themeflow-overlay-layer');
-      if (!this.overlayLayer) {
+      if (!this.overlayLayer && target) {
         this.overlayLayer = document.createElement('div');
         this.overlayLayer.id = 'themeflow-overlay-layer';
-        document.body.prepend(this.overlayLayer);
+        target.prepend(this.overlayLayer);
       }
     }
 
-    return { bgLayer: this.bgLayer, overlayLayer: this.overlayLayer };
+    return {
+      bgLayer: this.bgLayer || document.createElement('div'),
+      overlayLayer: this.overlayLayer || document.createElement('div'),
+    };
   }
 
   public async resolveImageUrl(config: ThemeConfig): Promise<string> {
@@ -66,30 +71,59 @@ export class ThemeEngine {
     const config = settings.currentConfig;
     const root = document.documentElement;
 
-    // Apply standard CSS variables
-    root.style.setProperty('--tf-accent', config.accentColor);
-    root.style.setProperty('--tf-accent-glow', `${config.accentColor}44`);
-    root.style.setProperty('--tf-code-font', `'${config.fontFamily}', Consolas, monospace`);
-
-    // Calculate surface colors
+    // Calculate coordinated surface colors based on user mode and overlay settings
     let overlayColor = `rgba(10, 10, 16, ${config.overlayOpacity})`;
-    let cardBg = `rgba(20, 20, 28, ${config.cardGlassOpacity})`;
+    let panelBg = `rgba(20, 20, 28, ${config.cardGlassOpacity})`;
+    let panelSecondary = `rgba(15, 15, 22, ${Math.min(0.95, config.cardGlassOpacity + 0.08)})`;
+    let editorBg = `rgba(13, 13, 19, ${Math.max(0.88, config.cardGlassOpacity)})`;
+    let toolbarBg = `rgba(18, 18, 25, ${config.cardGlassOpacity})`;
     let textPrimary = '#f3f4f6';
+    let textSecondary = '#9ca3af';
+    let border = 'rgba(255, 255, 255, 0.08)';
 
     if (config.mode === 'midnight') {
       overlayColor = `rgba(0, 0, 0, ${Math.max(0.85, config.overlayOpacity)})`;
-      cardBg = `rgba(8, 8, 12, ${Math.max(0.9, config.cardGlassOpacity)})`;
+      panelBg = `rgba(8, 8, 12, ${Math.max(0.9, config.cardGlassOpacity)})`;
+      panelSecondary = `rgba(5, 5, 8, ${Math.max(0.94, config.cardGlassOpacity)})`;
+      editorBg = `rgba(6, 6, 9, 0.96)`;
+      toolbarBg = `rgba(9, 9, 13, 0.94)`;
+      border = 'rgba(255, 255, 255, 0.06)';
     } else if (config.mode === 'glass') {
       overlayColor = `rgba(15, 15, 25, ${config.overlayOpacity * 0.75})`;
-      cardBg = `rgba(22, 22, 34, ${config.cardGlassOpacity * 0.75})`;
+      panelBg = `rgba(22, 22, 34, ${config.cardGlassOpacity * 0.75})`;
+      panelSecondary = `rgba(18, 18, 28, ${config.cardGlassOpacity * 0.8})`;
+      editorBg = `rgba(14, 14, 22, ${Math.max(0.82, config.cardGlassOpacity * 0.85)})`;
+      toolbarBg = `rgba(20, 20, 30, ${config.cardGlassOpacity * 0.75})`;
+      border = 'rgba(255, 255, 255, 0.12)';
     } else if (config.mode === 'light') {
       overlayColor = `rgba(240, 242, 245, ${config.overlayOpacity * 0.9})`;
-      cardBg = `rgba(255, 255, 255, ${config.cardGlassOpacity * 0.9})`;
+      panelBg = `rgba(255, 255, 255, ${config.cardGlassOpacity * 0.9})`;
+      panelSecondary = `rgba(248, 249, 251, 0.95)`;
+      editorBg = `rgba(255, 255, 255, 0.96)`;
+      toolbarBg = `rgba(245, 247, 250, 0.92)`;
       textPrimary = '#111827';
+      textSecondary = '#4b5563';
+      border = 'rgba(0, 0, 0, 0.08)';
     }
 
-    root.style.setProperty('--tf-bg-card', cardBg);
+    // Standard ThemeFlow Custom Properties (Section 4 Specification)
+    root.style.setProperty('--tf-page-bg', 'transparent');
+    root.style.setProperty('--tf-panel-bg', panelBg);
+    root.style.setProperty('--tf-panel-secondary', panelSecondary);
+    root.style.setProperty('--tf-editor-bg', editorBg);
+    root.style.setProperty('--tf-toolbar-bg', toolbarBg);
     root.style.setProperty('--tf-text-primary', textPrimary);
+    root.style.setProperty('--tf-text-secondary', textSecondary);
+    root.style.setProperty('--tf-border', border);
+    root.style.setProperty('--tf-accent', config.accentColor);
+    root.style.setProperty('--tf-accent-glow', `${config.accentColor}44`);
+    root.style.setProperty('--tf-success', '#4ade80');
+    root.style.setProperty('--tf-error', '#f87171');
+    root.style.setProperty('--tf-code-font', `'${config.fontFamily}', Consolas, monospace`);
+
+    // Backwards compatibility variables
+    root.style.setProperty('--tf-bg-card', panelBg);
+    root.style.setProperty('--tf-border-color', border);
 
     // Apply background image and filters
     const imgUrl = await this.resolveImageUrl(config);

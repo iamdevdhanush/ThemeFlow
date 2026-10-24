@@ -6,8 +6,10 @@ export class LeetCodeAdapter {
   private observer: MutationObserver | null = null;
   private alertedVerdicts = new Set<string>();
   private quickPill: HTMLElement | null = null;
+  private weAddedDarkClass = false;
 
   public init(settings: UserSettings): void {
+    this.syncNativeThemeState(settings);
     this.initVerdictWatcher(settings);
     if (settings.quickSwitchVisible && settings.enabled) {
       this.renderQuickPill(settings.currentConfig);
@@ -15,10 +17,37 @@ export class LeetCodeAdapter {
   }
 
   public update(settings: UserSettings): void {
+    this.syncNativeThemeState(settings);
     if (!settings.enabled || !settings.quickSwitchVisible) {
       this.removeQuickPill();
     } else {
       this.renderQuickPill(settings.currentConfig);
+    }
+  }
+
+  private syncNativeThemeState(settings: UserSettings): void {
+    if (!settings.enabled) {
+      if (this.weAddedDarkClass) {
+        document.documentElement.classList.remove('dark');
+        document.documentElement.removeAttribute('data-theme');
+        this.weAddedDarkClass = false;
+      }
+      return;
+    }
+
+    const config = settings.currentConfig;
+    if (config.mode !== 'light') {
+      if (!document.documentElement.classList.contains('dark')) {
+        document.documentElement.classList.add('dark');
+        document.documentElement.setAttribute('data-theme', 'dark');
+        this.weAddedDarkClass = true;
+      }
+    } else {
+      if (this.weAddedDarkClass) {
+        document.documentElement.classList.remove('dark');
+        document.documentElement.removeAttribute('data-theme');
+        this.weAddedDarkClass = false;
+      }
     }
   }
 
@@ -36,8 +65,6 @@ export class LeetCodeAdapter {
       acceptedEls.forEach((el) => {
         const text = el.textContent?.trim().toLowerCase() || '';
         if (text.includes('accepted')) {
-          const key = `lc_ac_${Date.now()}`;
-          // throttle triggers within 4 seconds
           if (!this.alertedVerdicts.has('lc_ac_recent')) {
             this.alertedVerdicts.add('lc_ac_recent');
             setTimeout(() => this.alertedVerdicts.delete('lc_ac_recent'), 4000);
@@ -120,5 +147,10 @@ export class LeetCodeAdapter {
       this.observer = null;
     }
     this.removeQuickPill();
+    if (this.weAddedDarkClass) {
+      document.documentElement.classList.remove('dark');
+      document.documentElement.removeAttribute('data-theme');
+      this.weAddedDarkClass = false;
+    }
   }
 }
