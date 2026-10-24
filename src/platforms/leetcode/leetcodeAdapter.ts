@@ -1,15 +1,22 @@
 import { UserSettings, ThemeConfig } from '../../types/theme';
-import { fireAcceptedCelebration } from '../../effects/confetti';
+import { fireAcceptedCelebration } from '../../effects/celebration';
 import { playAcceptedSound, playRejectedSound } from '../../audio/soundPlayer';
 
 export class LeetCodeAdapter {
   private observer: MutationObserver | null = null;
   private htmlObserver: MutationObserver | null = null;
-  private alertedVerdicts = new Set<string>();
+  private seenVerdictElements = new WeakSet<Element>();
+  private alertedSubmissionKeys = new Set<string>();
+  private submissionPending = false;
+  private submissionPendingTime = 0;
   private quickPill: HTMLElement | null = null;
   private weAddedDarkClass = false;
+  private boundClickHandler: ((e: MouseEvent) => void) | null = null;
+  private boundKeyHandler: ((e: KeyboardEvent) => void) | null = null;
 
   public init(settings: UserSettings): void {
+    this.recordExistingVerdictsBaseline();
+    this.attachSubmissionListeners();
     this.syncNativeThemeState(settings);
     this.initHtmlObserver(settings);
     this.initVerdictWatcher(settings);
@@ -25,6 +32,50 @@ export class LeetCodeAdapter {
     } else {
       this.renderQuickPill(settings.currentConfig);
     }
+  }
+
+  /**
+   * Pre-records existing verdicts on initial page load to prevent historical
+   * submissions or "Solved" badges from falsely triggering celebrations.
+   */
+  private recordExistingVerdictsBaseline(): void {
+    const existing = document.querySelectorAll(
+      '[data-e2e-locator="submission-result"], .text-green-s, [class*="text-green-s"], .text-red-s, [class*="text-red-s"]'
+    );
+    existing.forEach((el) => {
+      this.seenVerdictElements.add(el);
+    });
+  }
+
+  /**
+   * Listens for user interactions that initiate a submission (Submit button click or Ctrl/Cmd+Enter).
+   */
+  private attachSubmissionListeners(): void {
+    this.boundClickHandler = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+
+      const submitBtn = target.closest(
+        'button[data-e2e-locator="console-submit-button"], button[data-cy="submit-code-btn"], button'
+      );
+      if (submitBtn) {
+        const text = submitBtn.textContent?.trim().toLowerCase() || '';
+        if (text.includes('submit')) {
+          this.submissionPending = true;
+          this.submissionPendingTime = Date.now();
+        }
+      }
+    };
+
+    this.boundKeyHandler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        this.submissionPending = true;
+        this.submissionPendingTime = Date.now();
+      }
+    };
+
+    document.addEventListener('click', this.boundClickHandler, true);
+    document.addEventListener('keydown', this.boundKeyHandler, true);
   }
 
   private initHtmlObserver(settings: UserSettings): void {
@@ -75,46 +126,85 @@ export class LeetCodeAdapter {
   private initVerdictWatcher(settings: UserSettings): void {
     if (this.observer) return;
 
-    this.observer = new MutationObserver(() => {
+    this.observer = new MutationObserver((mutations) => {
       if (!settings.enabled) return;
       const config = settings.currentConfig;
 
-      // Check for LeetCode Accepted verdict
-      const acceptedEls = document.querySelectorAll(
-        '[data-e2e-locator="submission-result"], .text-green-s, [class*="text-green-s"]'
-      );
-      acceptedEls.forEach((el) => {
-        const text = el.textContent?.trim().toLowerCase() || '';
-        if (text.includes('accepted')) {
-          if (!this.alertedVerdicts.has('lc_ac_recent')) {
-            this.alertedVerdicts.add('lc_ac_recent');
-            setTimeout(() => this.alertedVerdicts.delete('lc_ac_recent'), 4000);
+      // Track LeetCode judging/pending status transition
+      for (const m of mutations) {
+        if (m.type === 'childList' || m.type === 'characterData') {
+          const target = m.target as HTMLElement;
+          const text = target.textContent?.trim().toLowerCase() || '';
+          if (text.includes('pending') || text.includes('judging')) {
+            this.submissionPending = true;
+            this.submissionPendingTime = Date.now();
+          }
+        }
+      }
 
-            if (config.confettiEnabled) {
-              fireAcceptedCelebration();
+      // Check for Accepted verdict
+      const acceptedEls = document.querySelectorAll(
+        '[data-e2e-locator="submission-result"], [class*="text-green-s"], .text-green-s'
+      );
+
+      acceptedEls.forEach((el) => {
+        const text = el.textContent?.trim() || '';
+        const lower = text.toLowerCase();
+
+        // Must be exactly "Accepted" (not "Solved", not "Accepted Solutions")
+        if (lower === 'accepted' || lower.startsWith('accepted')) {
+          if (this.seenVerdictElements.has(el)) return;
+
+          // Only fire if submission was triggered within the last 60 seconds
+          const isRecentSubmission = this.submissionPending && (Date.now() - this.submissionPendingTime < 60000);
+
+          if (isRecentSubmission) {
+            const uniqueKey = `lc_${Date.now()}_${text}`;
+            if (!this.alertedSubmissionKeys.has(uniqueKey)) {
+              this.alertedSubmissionKeys.add(uniqueKey);
+              this.seenVerdictElements.add(el);
+              this.submissionPending = false;
+
+              if (config.confettiEnabled) {
+                fireAcceptedCelebration({
+                  anchorElement: el as HTMLElement,
+                  themeAccent: config.accentColor,
+                  verdictText: 'ACCEPTED',
+                });
+              }
+
+              if (config.soundEnabled) {
+                playAcceptedSound(config.soundVolume, true);
+              }
             }
-            if (config.soundEnabled) {
-              playAcceptedSound(config.soundVolume, true);
-            }
+          } else {
+            // Baseline/historical element, mark as seen
+            this.seenVerdictElements.add(el);
           }
         }
       });
 
-      // Check for LeetCode Wrong Answer / Runtime Error
+      // Check for Rejected verdict (Wrong Answer, Runtime Error, etc.)
       const rejectedEls = document.querySelectorAll(
-        '.text-red-s, [class*="text-red-s"]'
+        '[data-e2e-locator="submission-result"], [class*="text-red-s"], .text-red-s'
       );
+
       rejectedEls.forEach((el) => {
         const text = el.textContent?.trim().toLowerCase() || '';
         if (
           text.includes('wrong answer') ||
           text.includes('runtime error') ||
-          text.includes('time limit exceeded')
+          text.includes('time limit exceeded') ||
+          text.includes('memory limit exceeded') ||
+          text.includes('compile error')
         ) {
-          if (!this.alertedVerdicts.has('lc_wa_recent')) {
-            this.alertedVerdicts.add('lc_wa_recent');
-            setTimeout(() => this.alertedVerdicts.delete('lc_wa_recent'), 4000);
+          if (this.seenVerdictElements.has(el)) return;
 
+          const isRecentSubmission = this.submissionPending && (Date.now() - this.submissionPendingTime < 60000);
+          this.seenVerdictElements.add(el);
+
+          if (isRecentSubmission) {
+            this.submissionPending = false;
             if (config.soundEnabled) {
               playRejectedSound(config.soundVolume, true);
             }
@@ -174,6 +264,14 @@ export class LeetCodeAdapter {
     if (this.htmlObserver) {
       this.htmlObserver.disconnect();
       this.htmlObserver = null;
+    }
+    if (this.boundClickHandler) {
+      document.removeEventListener('click', this.boundClickHandler, true);
+      this.boundClickHandler = null;
+    }
+    if (this.boundKeyHandler) {
+      document.removeEventListener('keydown', this.boundKeyHandler, true);
+      this.boundKeyHandler = null;
     }
     this.removeQuickPill();
     if (this.weAddedDarkClass) {

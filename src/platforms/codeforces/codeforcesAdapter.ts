@@ -1,13 +1,18 @@
 import { UserSettings, ThemeConfig } from '../../types/theme';
-import { fireAcceptedCelebration } from '../../effects/confetti';
+import { fireAcceptedCelebration } from '../../effects/celebration';
 import { playAcceptedSound, playRejectedSound } from '../../audio/soundPlayer';
 
 export class CodeforcesAdapter {
   private observer: MutationObserver | null = null;
   private alertedVerdicts = new Set<string>();
+  private historicalSubmissionIds = new Set<string>();
+  private evaluatingSubmissions = new Set<string>();
   private quickPill: HTMLElement | null = null;
+  private boundSubmitHandler: ((e: MouseEvent) => void) | null = null;
 
   public init(settings: UserSettings): void {
+    this.recordExistingSubmissionsBaseline();
+    this.attachSubmitListener();
     this.initVerdictWatcher(settings);
     if (settings.quickSwitchVisible && settings.enabled) {
       this.renderQuickPill(settings.currentConfig);
@@ -22,6 +27,48 @@ export class CodeforcesAdapter {
     }
   }
 
+  /**
+   * Pre-records existing submissions present on initial page load so historical
+   * submissions in tables never trigger celebration.
+   */
+  private recordExistingSubmissionsBaseline(): void {
+    const existingRows = document.querySelectorAll('tr[data-submission-id]');
+    existingRows.forEach((row) => {
+      const id = row.getAttribute('data-submission-id');
+      if (id) {
+        this.historicalSubmissionIds.add(id);
+      }
+    });
+
+    // Also mark any pre-rendered verdict spans as baseline
+    const existingVerdicts = document.querySelectorAll(
+      '.verdict-accepted, .verdict-rejected, span[submissionverdict]'
+    );
+    existingVerdicts.forEach((el) => {
+      const row = el.closest('tr');
+      const id = row?.getAttribute('data-submission-id') || el.id || '';
+      if (id) {
+        this.historicalSubmissionIds.add(id);
+      }
+    });
+  }
+
+  private attachSubmitListener(): void {
+    this.boundSubmitHandler = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+
+      const submitBtn = target.closest('input[type="submit"], button');
+      if (submitBtn) {
+        const val = (submitBtn.getAttribute('value') || submitBtn.textContent || '').toLowerCase();
+        if (val.includes('submit')) {
+          // User initiated a new submission
+        }
+      }
+    };
+    document.addEventListener('click', this.boundSubmitHandler, true);
+  }
+
   private initVerdictWatcher(settings: UserSettings): void {
     if (this.observer) return;
 
@@ -29,20 +76,45 @@ export class CodeforcesAdapter {
       if (!settings.enabled) return;
       const config = settings.currentConfig;
 
-      // Check for accepted verdicts
+      // Track submissions currently evaluating / running
+      const testingElements = document.querySelectorAll(
+        'span[submissionverdict="TESTING"], span[submissionverdict="UNKNOWN"], .verdict-waiting'
+      );
+      testingElements.forEach((el) => {
+        const row = el.closest('tr');
+        const submissionId = row?.getAttribute('data-submission-id');
+        if (submissionId) {
+          this.evaluatingSubmissions.add(submissionId);
+        }
+      });
+
+      // Check for confirmed accepted verdicts
       const acceptedElements = document.querySelectorAll(
         '.verdict-accepted, span[submissionverdict="OK"]'
       );
+
       acceptedElements.forEach((el) => {
         const row = el.closest('tr');
         const submissionId = row?.getAttribute('data-submission-id') || el.textContent?.trim() || '';
         const key = `cf_ac_${submissionId}`;
 
+        // Skip historical submissions that were present on page load
+        if (submissionId && this.historicalSubmissionIds.has(submissionId) && !this.evaluatingSubmissions.has(submissionId)) {
+          return;
+        }
+
         if (submissionId && !this.alertedVerdicts.has(key)) {
           this.alertedVerdicts.add(key);
+          this.evaluatingSubmissions.delete(submissionId);
+
           if (config.confettiEnabled) {
-            fireAcceptedCelebration();
+            fireAcceptedCelebration({
+              anchorElement: el as HTMLElement,
+              themeAccent: config.accentColor,
+              verdictText: 'ACCEPTED',
+            });
           }
+
           if (config.soundEnabled) {
             playAcceptedSound(config.soundVolume, true);
           }
@@ -53,19 +125,28 @@ export class CodeforcesAdapter {
       const rejectedElements = document.querySelectorAll(
         '.verdict-rejected, span[submissionverdict="WRONG_ANSWER"], span[submissionverdict="TIME_LIMIT_EXCEEDED"], span[submissionverdict="MEMORY_LIMIT_EXCEEDED"]'
       );
+
       rejectedElements.forEach((el) => {
         const row = el.closest('tr');
         const submissionId = row?.getAttribute('data-submission-id') || el.textContent?.trim() || '';
         const key = `cf_wa_${submissionId}`;
 
+        if (submissionId && this.historicalSubmissionIds.has(submissionId) && !this.evaluatingSubmissions.has(submissionId)) {
+          return;
+        }
+
         if (submissionId && !this.alertedVerdicts.has(key)) {
           this.alertedVerdicts.add(key);
+          this.evaluatingSubmissions.delete(submissionId);
+
           if (config.soundEnabled) {
             playRejectedSound(config.soundVolume, true);
           }
         }
       });
     });
+
+    if (!document.body) return;
 
     this.observer.observe(document.body, {
       childList: true,
@@ -112,6 +193,10 @@ export class CodeforcesAdapter {
     if (this.observer) {
       this.observer.disconnect();
       this.observer = null;
+    }
+    if (this.boundSubmitHandler) {
+      document.removeEventListener('click', this.boundSubmitHandler, true);
+      this.boundSubmitHandler = null;
     }
     this.removeQuickPill();
   }

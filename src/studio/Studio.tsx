@@ -185,7 +185,10 @@ export const Studio: React.FC = () => {
 
   const handleSimulateAc = () => {
     if (config.confettiEnabled) {
-      fireAcceptedCelebration();
+      fireAcceptedCelebration({
+        themeAccent: config.accentColor,
+        verdictText: 'ACCEPTED',
+      });
     }
     playAcceptedSound(config.soundVolume, true);
   };
