@@ -15,7 +15,9 @@ import {
   Eye,
   Layers,
   Copy,
-  Globe,
+  ChevronDown,
+  Palette,
+  Activity,
 } from 'lucide-react';
 import {
   UserSettings,
@@ -41,13 +43,13 @@ import { EffectManager } from '../effects/particles';
 import './Studio.css';
 
 const ACCENT_COLORS = [
-  '#a78bfa', // Lavender
+  '#a78bfa', // Lavender / Violet
   '#38bdf8', // Cyan
   '#34d399', // Emerald
   '#f472b6', // Sakura Pink
   '#fbbf24', // Amber
   '#f87171', // Coral Red
-  '#c084fc', // Violet
+  '#c084fc', // Purple
   '#818cf8', // Indigo
 ];
 
@@ -57,6 +59,7 @@ export const Studio: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const [previewBgUrl, setPreviewBgUrl] = useState<string>('');
   const [previewPlatform, setPreviewPlatform] = useState<'leetcode' | 'codeforces'>('leetcode');
+  const [advancedOpen, setAdvancedOpen] = useState(false);
   const effectManagerRef = useRef<EffectManager | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -68,6 +71,7 @@ export const Studio: React.FC = () => {
 
     effectManagerRef.current = new EffectManager();
     return () => {
+      stopAcceptedCelebration();
       effectManagerRef.current?.destroy();
     };
   }, []);
@@ -100,7 +104,7 @@ export const Studio: React.FC = () => {
     };
   }, [config.imagePath, config.isCustom, config.id]);
 
-  // Update effect preview
+  // Update visual ambient effect
   useEffect(() => {
     if (effectManagerRef.current) {
       effectManagerRef.current.setEffect(config.effect);
@@ -199,7 +203,7 @@ export const Studio: React.FC = () => {
   };
 
   const handleCopySample = () => {
-    const textToCopy = previewPlatform === 'leetcode' ? '[2,7,11,15]\n9' : '4\n1 2 4 3';
+    const textToCopy = previewPlatform === 'leetcode' ? '[2,7,11,15]\n9' : '2\n3 2\n4 4';
     navigator.clipboard.writeText(textToCopy);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -207,54 +211,65 @@ export const Studio: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="studio-container" style={{ padding: 40, textAlign: 'center' }}>
-        <p style={{ color: '#94a3b8' }}>Loading ThemeFlow Studio...</p>
+      <div className="studio-loading-view">
+        <div className="studio-loading-spinner" />
+        <p>Loading ThemeFlow Studio...</p>
       </div>
     );
   }
 
-  // Dynamic surface colors
-  let previewOverlayColor = `rgba(10, 10, 16, ${config.overlayOpacity})`;
-  let previewCardBg = `rgba(20, 20, 28, ${config.cardGlassOpacity})`;
-  let previewTextPrimary = '#f3f4f6';
+  // Calculate refined surface values for live preview
+  let previewOverlayColor = `rgba(10, 11, 16, ${Math.min(0.92, Math.max(0.35, config.overlayOpacity))})`;
+  let previewCardBg = `rgba(16, 18, 24, ${Math.min(0.98, Math.max(0.75, config.cardGlassOpacity))})`;
+  let previewCardBorder = 'rgba(255, 255, 255, 0.08)';
+  let previewTextPrimary = '#f8fafc';
 
   if (config.mode === 'midnight') {
-    previewOverlayColor = `rgba(0, 0, 0, ${Math.max(0.85, config.overlayOpacity)})`;
-    previewCardBg = `rgba(8, 8, 12, ${Math.max(0.9, config.cardGlassOpacity)})`;
+    previewOverlayColor = `rgba(3, 4, 7, ${Math.max(0.88, config.overlayOpacity)})`;
+    previewCardBg = `rgba(9, 10, 14, ${Math.max(0.94, config.cardGlassOpacity)})`;
+    previewCardBorder = 'rgba(255, 255, 255, 0.05)';
   } else if (config.mode === 'glass') {
-    previewOverlayColor = `rgba(15, 15, 25, ${config.overlayOpacity * 0.75})`;
-    previewCardBg = `rgba(22, 22, 34, ${config.cardGlassOpacity * 0.75})`;
+    previewOverlayColor = `rgba(12, 13, 20, ${config.overlayOpacity * 0.8})`;
+    previewCardBg = `rgba(20, 22, 32, ${Math.max(0.65, config.cardGlassOpacity * 0.85)})`;
+    previewCardBorder = 'rgba(255, 255, 255, 0.12)';
   } else if (config.mode === 'light') {
-    previewOverlayColor = `rgba(240, 242, 245, ${config.overlayOpacity * 0.9})`;
-    previewCardBg = `rgba(255, 255, 255, ${config.cardGlassOpacity * 0.9})`;
-    previewTextPrimary = '#111827';
+    previewOverlayColor = `rgba(241, 245, 249, ${config.overlayOpacity * 0.9})`;
+    previewCardBg = `rgba(255, 255, 255, ${Math.max(0.9, config.cardGlassOpacity)})`;
+    previewCardBorder = 'rgba(0, 0, 0, 0.08)';
+    previewTextPrimary = '#0f172a';
   }
 
   return (
     <div className="studio-container">
-      {/* Studio Header */}
+      {/* Refined Minimalist Header */}
       <header className="studio-header">
         <div className="header-brand">
-          <div className="studio-logo">
-            <Sparkles size={20} />
+          <div className="studio-logo" aria-hidden="true">
+            <Sparkles size={16} />
           </div>
           <div className="studio-title-group">
-            <h1>
-              ThemeFlow
+            <div className="studio-brand-line">
+              <span className="brand-name">ThemeFlow</span>
               <span className="studio-tag">Studio</span>
-            </h1>
-            <p>Make your coding space your own.</p>
+            </div>
+            <p className="brand-subtitle">Anime-inspired workspace themes for competitive programming</p>
           </div>
         </div>
 
         <div className="header-actions">
-          <div className="status-badge">
-            <span className="status-dot"></span>
-            <span>Live on LeetCode & Codeforces</span>
+          <div className="status-badge" title="Extension active on LeetCode and Codeforces">
+            <span className="status-dot" />
+            <span className="status-text">Active on LeetCode & Codeforces</span>
           </div>
 
-          <button className="btn-secondary" onClick={handleResetDefaults} title="Reset all settings to default">
-            <RotateCcw size={14} />
+          <div className="header-divider" />
+
+          <button
+            className="btn-header-secondary"
+            onClick={handleResetDefaults}
+            title="Reset all settings to default values"
+          >
+            <RotateCcw size={13} />
             <span>Reset</span>
           </button>
 
@@ -262,67 +277,90 @@ export const Studio: React.FC = () => {
             href="https://leetcode.com/problemset/"
             target="_blank"
             rel="noreferrer"
-            className="btn-secondary"
-            style={{ textDecoration: 'none', color: '#fb923c' }}
+            className="btn-header-link lc-link"
+            title="Open LeetCode problemset in new tab"
           >
             <span>LeetCode</span>
-            <ExternalLink size={13} />
+            <ExternalLink size={12} />
           </a>
 
           <a
             href="https://codeforces.com"
             target="_blank"
             rel="noreferrer"
-            className="btn-primary"
-            style={{ textDecoration: 'none' }}
+            className="btn-header-link cf-link"
+            title="Open Codeforces in new tab"
           >
             <span>Codeforces</span>
-            <ExternalLink size={13} />
+            <ExternalLink size={12} />
           </a>
         </div>
       </header>
 
-      {/* Main Studio Layout */}
+      {/* Main Studio Two-Pane Layout */}
       <div className="studio-layout">
-        {/* Left Sidebar Customization Controls */}
-        <aside className="studio-sidebar">
-          {/* Theme Gallery */}
-          <div className="sidebar-section">
+        {/* Left Control Sidebar */}
+        <aside className="studio-sidebar" aria-label="Theme Customization Controls">
+          
+          {/* SECTION 1: ATMOSPHERE */}
+          <section className="sidebar-section">
             <div className="section-heading">
-              <Layers size={14} />
-              <span>Background Themes ({THEME_PRESETS.length})</span>
+              <Layers size={13} />
+              <span>Atmosphere</span>
+              <span className="section-badge">{THEME_PRESETS.length}</span>
             </div>
 
+            {/* Consistent Two-Column Theme Gallery */}
             <div className="wallpaper-grid">
               {THEME_PRESETS.map((preset) => {
                 const isActive = settings.activeThemeId === preset.id;
                 return (
-                  <div
+                  <button
                     key={preset.id}
+                    type="button"
                     className={`wallpaper-card ${isActive ? 'active' : ''}`}
                     onClick={() => handleSelectPreset(preset.id)}
+                    aria-pressed={isActive}
+                    title={`Select ${preset.name} theme`}
                   >
                     <div className="wallpaper-thumb-box">
-                      <img src={preset.thumbnail} alt={preset.name} loading="lazy" />
+                      <img src={preset.thumbnail} alt="" loading="lazy" />
                       {isActive && (
-                        <div className="wallpaper-active-badge">
-                          <Check size={12} strokeWidth={3} />
+                        <div className="wallpaper-active-pill">
+                          <Check size={11} strokeWidth={3} />
                         </div>
                       )}
                     </div>
-                    <span className="wallpaper-name" title={preset.name}>
-                      {preset.name}
-                    </span>
-                  </div>
+                    <div className="wallpaper-meta">
+                      <span className="wallpaper-name">{preset.name}</span>
+                      <span className="wallpaper-mode-tag">{preset.defaultMode}</span>
+                    </div>
+                  </button>
                 );
               })}
             </div>
 
-            {/* Upload Custom Wallpaper */}
-            <div className="upload-box" onClick={() => fileInputRef.current?.click()}>
-              <Upload size={18} />
-              <span>Upload Custom Wallpaper</span>
-              <p>Supports PNG, JPG, WebP, AVIF up to 10MB</p>
+            {/* Custom Wallpaper Upload Card */}
+            <div
+              className="upload-card"
+              onClick={() => fileInputRef.current?.click()}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  fileInputRef.current?.click();
+                }
+              }}
+              title="Click to upload a custom wallpaper image"
+            >
+              <div className="upload-icon-wrap">
+                <Upload size={14} />
+              </div>
+              <div className="upload-copy">
+                <span className="upload-title">Upload Custom Wallpaper</span>
+                <span className="upload-hint">PNG, JPG, WebP, AVIF up to 10MB</span>
+              </div>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -331,58 +369,58 @@ export const Studio: React.FC = () => {
                 onChange={handleCustomUpload}
               />
             </div>
-          </div>
+          </section>
 
-          {/* Surface & Panel Appearance */}
-          <div className="sidebar-section">
+          {/* SECTION 2: APPEARANCE */}
+          <section className="sidebar-section">
             <div className="section-heading">
-              <Monitor size={14} />
-              <span>Surface & Theme Mode</span>
+              <Monitor size={13} />
+              <span>Appearance</span>
             </div>
 
-            <div className="mode-selector">
-              <button
-                className={`mode-btn ${config.mode === 'dark' ? 'active' : ''}`}
-                onClick={() => updateConfig({ mode: 'dark' })}
-              >
-                <Moon size={14} />
-                <span>Deep Dark</span>
-              </button>
-              <button
-                className={`mode-btn ${config.mode === 'midnight' ? 'active' : ''}`}
-                onClick={() => updateConfig({ mode: 'midnight' })}
-              >
-                <Moon size={14} />
-                <span>OLED Black</span>
-              </button>
-              <button
-                className={`mode-btn ${config.mode === 'glass' ? 'active' : ''}`}
-                onClick={() => updateConfig({ mode: 'glass' })}
-              >
-                <Eye size={14} />
-                <span>Frosted Glass</span>
-              </button>
-              <button
-                className={`mode-btn ${config.mode === 'light' ? 'active' : ''}`}
-                onClick={() => updateConfig({ mode: 'light' })}
-              >
-                <Sun size={14} />
-                <span>Classic Tint</span>
-              </button>
+            {/* Surface Mode Selector */}
+            <div className="control-group">
+              <span className="control-group-title">Surface Mode</span>
+              <div className="mode-selector">
+                <button
+                  type="button"
+                  className={`mode-btn ${config.mode === 'dark' ? 'active' : ''}`}
+                  onClick={() => updateConfig({ mode: 'dark' })}
+                >
+                  <Moon size={13} />
+                  <span>Deep Dark</span>
+                </button>
+                <button
+                  type="button"
+                  className={`mode-btn ${config.mode === 'midnight' ? 'active' : ''}`}
+                  onClick={() => updateConfig({ mode: 'midnight' })}
+                >
+                  <Moon size={13} />
+                  <span>OLED Black</span>
+                </button>
+                <button
+                  type="button"
+                  className={`mode-btn ${config.mode === 'glass' ? 'active' : ''}`}
+                  onClick={() => updateConfig({ mode: 'glass' })}
+                >
+                  <Eye size={13} />
+                  <span>Frosted</span>
+                </button>
+                <button
+                  type="button"
+                  className={`mode-btn ${config.mode === 'light' ? 'active' : ''}`}
+                  onClick={() => updateConfig({ mode: 'light' })}
+                >
+                  <Sun size={13} />
+                  <span>Classic Tint</span>
+                </button>
+              </div>
             </div>
-          </div>
 
-          {/* Tuning Sliders */}
-          <div className="sidebar-section">
-            <div className="section-heading">
-              <Sliders size={14} />
-              <span>Atmosphere & Visibility</span>
-            </div>
-
-            {/* Overlay Darkness */}
+            {/* Overlay Darkness Slider */}
             <div className="control-row">
-              <div className="control-label">
-                <span>Overlay Darkness</span>
+              <div className="control-label-row">
+                <span className="control-label">Overlay Darkness</span>
                 <span className="control-val">{Math.round(config.overlayOpacity * 100)}%</span>
               </div>
               <input
@@ -396,10 +434,64 @@ export const Studio: React.FC = () => {
               />
             </div>
 
+            {/* Panel Glass Opacity */}
+            <div className="control-row">
+              <div className="control-label-row">
+                <span className="control-label">Panel Opacity</span>
+                <span className="control-val">{Math.round(config.cardGlassOpacity * 100)}%</span>
+              </div>
+              <input
+                type="range"
+                className="range-slider"
+                min="0.3"
+                max="0.98"
+                step="0.02"
+                value={config.cardGlassOpacity}
+                onChange={(e) => updateConfig({ cardGlassOpacity: parseFloat(e.target.value) })}
+              />
+            </div>
+
+            {/* Accent Color Palette */}
+            <div className="control-group">
+              <div className="control-label-row">
+                <span className="control-label">Accent Color</span>
+                <span className="control-val mono">{config.accentColor.toUpperCase()}</span>
+              </div>
+              <div className="color-presets-row">
+                {ACCENT_COLORS.map((col) => (
+                  <button
+                    key={col}
+                    type="button"
+                    className={`color-swatch ${config.accentColor.toLowerCase() === col.toLowerCase() ? 'active' : ''}`}
+                    style={{ backgroundColor: col }}
+                    onClick={() => updateConfig({ accentColor: col })}
+                    aria-label={`Select accent color ${col}`}
+                    title={col}
+                  />
+                ))}
+                <label className="custom-color-picker" title="Pick custom color">
+                  <input
+                    type="color"
+                    value={config.accentColor}
+                    onChange={(e) => updateConfig({ accentColor: e.target.value })}
+                  />
+                  <Palette size={12} />
+                </label>
+              </div>
+            </div>
+          </section>
+
+          {/* SECTION 3: FOCUS & MOTION */}
+          <section className="sidebar-section">
+            <div className="section-heading">
+              <Sliders size={13} />
+              <span>Focus & Motion</span>
+            </div>
+
             {/* Background Blur */}
             <div className="control-row">
-              <div className="control-label">
-                <span>Background Blur</span>
+              <div className="control-label-row">
+                <span className="control-label">Wallpaper Blur</span>
                 <span className="control-val">{config.blur}px</span>
               </div>
               <input
@@ -415,8 +507,8 @@ export const Studio: React.FC = () => {
 
             {/* Brightness */}
             <div className="control-row">
-              <div className="control-label">
-                <span>Wallpaper Brightness</span>
+              <div className="control-label-row">
+                <span className="control-label">Wallpaper Brightness</span>
                 <span className="control-val">{config.brightness}%</span>
               </div>
               <input
@@ -430,154 +522,138 @@ export const Studio: React.FC = () => {
               />
             </div>
 
-            {/* Card Glass Opacity */}
+            {/* Visual Ambient Effect */}
             <div className="control-row">
-              <div className="control-label">
-                <span>Panel Opacity</span>
-                <span className="control-val">{Math.round(config.cardGlassOpacity * 100)}%</span>
+              <div className="control-label-row">
+                <span className="control-label">Visual Ambient Particles</span>
               </div>
-              <input
-                type="range"
-                className="range-slider"
-                min="0.3"
-                max="0.98"
-                step="0.02"
-                value={config.cardGlassOpacity}
-                onChange={(e) => updateConfig({ cardGlassOpacity: parseFloat(e.target.value) })}
-              />
+              <select
+                className="select-input"
+                value={config.effect}
+                onChange={(e) => updateConfig({ effect: e.target.value as VisualEffect })}
+              >
+                <option value="none">None (Clean & Still)</option>
+                <option value="sakura">Gentle Sakura Petals</option>
+                <option value="rain">Subtle Raindrops</option>
+                <option value="stars">Twinkling Night Stars</option>
+              </select>
             </div>
-          </div>
 
-          {/* Accent Color Palette */}
-          <div className="sidebar-section">
-            <div className="section-heading">
-              <Sparkles size={14} />
-              <span>Accent Color</span>
-            </div>
-            <div className="color-presets">
-              {ACCENT_COLORS.map((col) => (
-                <div
-                  key={col}
-                  className={`color-swatch ${config.accentColor === col ? 'active' : ''}`}
-                  style={{ backgroundColor: col }}
-                  onClick={() => updateConfig({ accentColor: col })}
-                  title={col}
-                />
-              ))}
+            {/* Acceptance Celebration Toggle */}
+            <label className="checkbox-control">
               <input
-                type="color"
-                value={config.accentColor}
-                onChange={(e) => updateConfig({ accentColor: e.target.value })}
-                title="Custom Color"
-                style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: '50%',
-                  cursor: 'pointer',
-                  border: 'none',
-                  background: 'none',
-                }}
+                type="checkbox"
+                checked={config.confettiEnabled}
+                onChange={(e) => updateConfig({ confettiEnabled: e.target.checked })}
               />
-            </div>
-          </div>
+              <div className="checkbox-copy">
+                <span className="checkbox-title">Anime Impact Celebration</span>
+                <span className="checkbox-desc">Speed-line frame and victory badge on Accepted</span>
+              </div>
+            </label>
+          </section>
 
-          {/* Typography */}
-          <div className="sidebar-section">
-            <div className="section-heading">
-              <Code2 size={14} />
-              <span>Code Editor Font</span>
-            </div>
-            <select
-              className="select-input"
-              value={config.fontFamily}
-              onChange={(e) => updateConfig({ fontFamily: e.target.value as CodeFontFamily })}
+          {/* SECTION 4: ADVANCED SETTINGS (Compact Expandable Disclosure) */}
+          <section className="sidebar-section advanced-section">
+            <button
+              type="button"
+              className="advanced-toggle"
+              onClick={() => setAdvancedOpen(!advancedOpen)}
+              aria-expanded={advancedOpen}
             >
-              <option value="JetBrains Mono">JetBrains Mono</option>
-              <option value="Fira Code">Fira Code</option>
-              <option value="Consolas">Consolas</option>
-              <option value="monospace">Standard Monospace</option>
-            </select>
-          </div>
-
-          {/* Visual Effects & Audio */}
-          <div className="sidebar-section">
-            <div className="section-heading">
-              <Sparkles size={14} />
-              <span>Atmosphere & Sounds</span>
-            </div>
-
-            <div className="audio-grid">
-              {/* Effect selector */}
-              <div className="control-row">
-                <div className="control-label">
-                  <span>Visual Ambient Effect</span>
-                </div>
-                <select
-                  className="select-input"
-                  value={config.effect}
-                  onChange={(e) => updateConfig({ effect: e.target.value as VisualEffect })}
-                >
-                  <option value="none">None (Clean & Still)</option>
-                  <option value="sakura">Gentle Sakura Petals</option>
-                  <option value="rain">Subtle Raindrops</option>
-                  <option value="stars">Twinkling Night Stars</option>
-                </select>
+              <div className="advanced-toggle-label">
+                <Code2 size={13} />
+                <span>Advanced Settings</span>
               </div>
+              <ChevronDown
+                size={14}
+                className={`advanced-chevron ${advancedOpen ? 'rotated' : ''}`}
+              />
+            </button>
 
-              {/* Sound toggle & volume */}
-              <div className="control-row">
-                <div className="control-label">
-                  <span>Verdict Sound Feedback</span>
-                  <button
-                    className="btn-test-sound"
-                    style={{ padding: '3px 8px' }}
-                    onClick={() => updateConfig({ soundEnabled: !config.soundEnabled })}
+            {advancedOpen && (
+              <div className="advanced-drawer">
+                {/* Code Font */}
+                <div className="control-row">
+                  <div className="control-label-row">
+                    <span className="control-label">Code Editor Font</span>
+                  </div>
+                  <select
+                    className="select-input"
+                    value={config.fontFamily}
+                    onChange={(e) => updateConfig({ fontFamily: e.target.value as CodeFontFamily })}
                   >
-                    {config.soundEnabled ? <Volume2 size={12} /> : <VolumeX size={12} />}
-                    <span>{config.soundEnabled ? 'Enabled' : 'Muted'}</span>
+                    <option value="JetBrains Mono">JetBrains Mono</option>
+                    <option value="Fira Code">Fira Code</option>
+                    <option value="Consolas">Consolas</option>
+                    <option value="monospace">Standard Monospace</option>
+                  </select>
+                </div>
+
+                {/* Verdict Sound Feedback Toggle & Volume */}
+                <div className="control-row">
+                  <div className="control-label-row">
+                    <span className="control-label">Verdict Audio Chimes</span>
+                    <button
+                      type="button"
+                      className="btn-mini-sound"
+                      onClick={() => updateConfig({ soundEnabled: !config.soundEnabled })}
+                    >
+                      {config.soundEnabled ? <Volume2 size={11} /> : <VolumeX size={11} />}
+                      <span>{config.soundEnabled ? 'Enabled' : 'Muted'}</span>
+                    </button>
+                  </div>
+
+                  {config.soundEnabled && (
+                    <div className="sub-control-slider">
+                      <div className="control-label-row">
+                        <span className="sub-label">Volume</span>
+                        <span className="control-val">{Math.round(config.soundVolume * 100)}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        className="range-slider"
+                        min="0.1"
+                        max="1.0"
+                        step="0.05"
+                        value={config.soundVolume}
+                        onChange={(e) => updateConfig({ soundVolume: parseFloat(e.target.value) })}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Test Audio Chimes */}
+                <div className="audio-test-grid">
+                  <button
+                    type="button"
+                    className="btn-sound-test"
+                    onClick={() => playAcceptedSound(config.soundVolume, true)}
+                  >
+                    <Volume2 size={11} />
+                    <span>Test AC Chime</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-sound-test"
+                    onClick={() => playRejectedSound(config.soundVolume, true)}
+                  >
+                    <Volume2 size={11} />
+                    <span>Test WA Sound</span>
                   </button>
                 </div>
-                {config.soundEnabled && (
-                  <input
-                    type="range"
-                    className="range-slider"
-                    min="0.1"
-                    max="1.0"
-                    step="0.05"
-                    value={config.soundVolume}
-                    onChange={(e) => updateConfig({ soundVolume: parseFloat(e.target.value) })}
-                  />
-                )}
               </div>
+            )}
+          </section>
 
-              {/* Test Audio Buttons */}
-              <div className="audio-test-row">
-                <button className="btn-test-sound" onClick={() => playAcceptedSound(config.soundVolume, true)}>
-                  <Volume2 size={12} />
-                  <span>Test AC Chime</span>
-                </button>
-                <button className="btn-test-sound" onClick={() => playRejectedSound(config.soundVolume, true)}>
-                  <Volume2 size={12} />
-                  <span>Test WA Sound</span>
-                </button>
-              </div>
-
-              {/* Confetti toggle */}
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={config.confettiEnabled}
-                  onChange={(e) => updateConfig({ confettiEnabled: e.target.checked })}
-                />
-                <span>Anime Impact Celebration on Accepted Verdict</span>
-              </label>
-            </div>
-          </div>
+          <footer className="sidebar-footer">
+            <span>ThemeFlow v1.0 • Settings auto-saved to Chrome Storage</span>
+          </footer>
         </aside>
 
-        {/* Right Main Interactive Preview */}
-        <main className="studio-preview-pane">
-          {/* Live Background Underlay */}
+        {/* Right Main Live Preview Pane */}
+        <main className="studio-preview-pane" aria-label="Interactive Platform Preview">
+          {/* Wallpaper Layer with tuned filter */}
           <div
             className="preview-bg-underlay"
             style={{
@@ -585,6 +661,7 @@ export const Studio: React.FC = () => {
               filter: `brightness(${config.brightness}%) contrast(${config.contrast}%) blur(${config.blur}px)`,
             }}
           />
+          {/* Restrained Backdrop Tint Overlay */}
           <div
             className="preview-tint-overlay"
             style={{
@@ -593,129 +670,109 @@ export const Studio: React.FC = () => {
           />
 
           <div className="preview-content">
-            {/* Top Bar / Platform Switcher & Simulation */}
+            {/* Workbench Top Bar: Platform Switcher & Simulators */}
             <div
               className="preview-top-bar"
               style={{
                 backgroundColor: previewCardBg,
-                borderColor: 'var(--studio-border)',
-                backdropFilter: 'blur(16px)',
+                borderColor: previewCardBorder,
               }}
             >
-              {/* Platform Switcher Buttons */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div className="platform-nav-tabs">
                 <button
-                  className={`btn-secondary ${previewPlatform === 'leetcode' ? 'active-platform' : ''}`}
+                  type="button"
+                  className={`platform-tab ${previewPlatform === 'leetcode' ? 'active' : ''}`}
                   onClick={() => setPreviewPlatform('leetcode')}
-                  style={{
-                    padding: '4px 12px',
-                    borderColor: previewPlatform === 'leetcode' ? '#fb923c' : 'var(--studio-border)',
-                    color: previewPlatform === 'leetcode' ? '#fb923c' : 'inherit',
-                    backgroundColor: previewPlatform === 'leetcode' ? 'rgba(251, 146, 60, 0.15)' : 'transparent',
-                    fontWeight: 600,
-                  }}
                 >
+                  <span className="platform-tab-dot lc-dot" />
                   <span>LeetCode Preview</span>
                 </button>
 
                 <button
-                  className={`btn-secondary ${previewPlatform === 'codeforces' ? 'active-platform' : ''}`}
+                  type="button"
+                  className={`platform-tab ${previewPlatform === 'codeforces' ? 'active' : ''}`}
                   onClick={() => setPreviewPlatform('codeforces')}
-                  style={{
-                    padding: '4px 12px',
-                    borderColor: previewPlatform === 'codeforces' ? config.accentColor : 'var(--studio-border)',
-                    color: previewPlatform === 'codeforces' ? config.accentColor : 'inherit',
-                    backgroundColor: previewPlatform === 'codeforces' ? `${config.accentColor}22` : 'transparent',
-                    fontWeight: 600,
-                  }}
                 >
+                  <span className="platform-tab-dot cf-dot" />
                   <span>Codeforces Preview</span>
                 </button>
               </div>
 
-              <div className="preview-sim-buttons">
-                <button className="btn-sim-ac" onClick={handleSimulateAc} title="Test AC celebration">
-                  <Check size={14} />
-                  <span>Simulate Accepted (AC)</span>
+              <div className="preview-sim-cluster">
+                <button
+                  type="button"
+                  className="btn-sim-ac"
+                  onClick={handleSimulateAc}
+                  title="Simulate genuine Accepted submission and test animation"
+                >
+                  <Check size={13} strokeWidth={2.5} />
+                  <span>Simulate AC</span>
                 </button>
-                <button className="btn-sim-wa" onClick={handleSimulateWa} title="Test WA chime">
+                <button
+                  type="button"
+                  className="btn-sim-wa"
+                  onClick={handleSimulateWa}
+                  title="Simulate Wrong Answer sound"
+                >
                   <span>Simulate WA</span>
                 </button>
               </div>
             </div>
 
-            {/* LEETCODE PREVIEW */}
+            {/* LEETCODE INTERACTIVE PREVIEW */}
             {previewPlatform === 'leetcode' && (
               <div className="preview-workbench">
-                {/* LeetCode Description Card */}
+                {/* Problem Description Panel */}
                 <div
                   className="preview-panel"
                   style={{
                     backgroundColor: previewCardBg,
-                    backdropFilter: 'blur(16px)',
+                    borderColor: previewCardBorder,
                     color: previewTextPrimary,
                   }}
                 >
                   <div className="panel-header-bar">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div className="problem-meta-title">
                       <h2 style={{ color: config.accentColor }}>1. Two Sum</h2>
-                      <span
-                        style={{
-                          fontSize: 11,
-                          fontWeight: 600,
-                          color: '#4ade80',
-                          background: 'rgba(74, 222, 128, 0.15)',
-                          padding: '2px 8px',
-                          borderRadius: 9999,
-                        }}
-                      >
-                        Easy
-                      </span>
+                      <span className="lc-diff-badge">Easy</span>
                     </div>
-                    <span style={{ fontSize: 12, color: '#4ade80', display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <Check size={13} /> Solved
+                    <span className="lc-status-solved">
+                      <Check size={12} strokeWidth={3} />
+                      <span>Solved</span>
                     </span>
                   </div>
 
                   <div className="panel-body">
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      <span style={{ fontSize: 11, background: 'rgba(255, 255, 255, 0.06)', padding: '2px 8px', borderRadius: 4 }}>
-                        Array
-                      </span>
-                      <span style={{ fontSize: 11, background: 'rgba(255, 255, 255, 0.06)', padding: '2px 8px', borderRadius: 4 }}>
-                        Hash Table
-                      </span>
+                    <div className="topic-tags">
+                      <span className="tag-pill">Array</span>
+                      <span className="tag-pill">Hash Table</span>
                     </div>
 
                     <p>
-                      Given an array of integers <code style={{ color: config.accentColor }}>nums</code> and an integer <code style={{ color: config.accentColor }}>target</code>, return <em>indices of the two numbers such that they add up to target</em>.
+                      Given an array of integers <code className="inline-code" style={{ color: config.accentColor }}>nums</code> and an integer <code className="inline-code" style={{ color: config.accentColor }}>target</code>, return <em>indices of the two numbers such that they add up to target</em>.
                     </p>
 
-                    <p>
-                      You may assume that each input would have <strong>exactly one solution</strong>, and you may not use the <em>same</em> element twice.
+                    <p className="text-secondary">
+                      You may assume that each input would have <strong>exactly one solution</strong>, and you may not use the same element twice.
                     </p>
 
                     <div className="sample-box">
                       <div className="sample-head">
                         <span>Example 1</span>
                         <button
+                          type="button"
+                          className="btn-copy-sample"
                           onClick={handleCopySample}
-                          style={{
-                            background: 'none',
-                            border: 'none',
-                            color: copied ? '#4ade80' : '#94a3b8',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 4,
-                            fontSize: 11,
-                          }}
+                          title="Copy testcase"
                         >
                           <Copy size={11} />
                           <span>{copied ? 'Copied' : 'Copy'}</span>
                         </button>
                       </div>
-                      <pre className="sample-code" style={{ fontFamily: `'${config.fontFamily}', monospace` }}>
+                      <pre
+                        className="sample-code"
+                        style={{ fontFamily: `'${config.fontFamily}', Consolas, monospace` }}
+                      >
 Input: nums = [2,7,11,15], target = 9{"\n"}
 Output: [0,1]{"\n"}
 Explanation: Because nums[0] + nums[1] == 9, we return [0, 1].
@@ -724,15 +781,15 @@ Explanation: Because nums[0] + nums[1] == 9, we return [0, 1].
                   </div>
                 </div>
 
-                {/* LeetCode Monaco Code Editor Card */}
+                {/* Monaco-Style Code Editor Panel */}
                 <div
-                  className="preview-panel"
+                  className="preview-panel editor-panel"
                   style={{
                     backgroundColor: previewCardBg,
-                    backdropFilter: 'blur(16px)',
+                    borderColor: previewCardBorder,
                   }}
                 >
-                  <div className="editor-tabs">
+                  <div className="editor-tab-bar">
                     <div
                       className="editor-tab active"
                       style={{
@@ -740,21 +797,19 @@ Explanation: Because nums[0] + nums[1] == 9, we return [0, 1].
                         color: config.accentColor,
                       }}
                     >
-                      <Code2 size={13} />
+                      <Code2 size={12} />
                       <span>Solution.cpp</span>
                     </div>
-                    <span style={{ fontSize: 11, color: '#64748b', marginLeft: 'auto' }}>
-                      C++ • Auto
-                    </span>
+                    <span className="editor-lang-tag">C++ • Auto</span>
                   </div>
 
                   <div className="code-editor-box">
                     <div
                       className="editor-content-area"
-                      style={{ fontFamily: `'${config.fontFamily}', monospace` }}
+                      style={{ fontFamily: `'${config.fontFamily}', Consolas, monospace` }}
                     >
-                      <div className="line-numbers">
-                        {Array.from({ length: 15 }, (_, i) => (
+                      <div className="line-numbers" aria-hidden="true">
+                        {Array.from({ length: 14 }, (_, i) => (
                           <div key={i + 1}>{i + 1}</div>
                         ))}
                       </div>
@@ -781,7 +836,7 @@ Explanation: Because nums[0] + nums[1] == 9, we return [0, 1].
               </div>
             )}
 
-            {/* CODEFORCES PREVIEW */}
+            {/* CODEFORCES INTERACTIVE PREVIEW */}
             {previewPlatform === 'codeforces' && (
               <div className="preview-workbench">
                 {/* Problem Statement Card */}
@@ -789,85 +844,78 @@ Explanation: Because nums[0] + nums[1] == 9, we return [0, 1].
                   className="preview-panel"
                   style={{
                     backgroundColor: previewCardBg,
-                    backdropFilter: 'blur(16px)',
+                    borderColor: previewCardBorder,
                     color: previewTextPrimary,
                   }}
                 >
                   <div className="panel-header-bar">
-                    <h2 style={{ color: config.accentColor }}>D. Manhattan Permutations</h2>
-                    <span style={{ fontSize: 12, color: '#94a3b8' }}>Rating: 1400</span>
+                    <div className="problem-meta-title">
+                      <h2 style={{ color: config.accentColor }}>D. Manhattan Permutations</h2>
+                      <span className="cf-rating-badge">1400</span>
+                    </div>
+                    <div className="cf-breadcrumb-crumb">
+                      <span>Div. 4</span>
+                    </div>
                   </div>
 
                   <div className="panel-body">
                     <div className="meta-stats">
-                      <span>Time limit: 2.0s</span>
+                      <span>Time: 2.0s</span>
                       <span>•</span>
-                      <span>Memory limit: 256MB</span>
+                      <span>Memory: 256MB</span>
                       <span>•</span>
                       <span>Standard I/O</span>
                     </div>
 
                     <p>
-                      A permutation <i style={{ fontFamily: 'KaTeX_Math, "Times New Roman", serif', fontSize: '15px' }}>p</i> of length <i style={{ fontFamily: 'KaTeX_Math, "Times New Roman", serif', fontSize: '15px' }}>n</i> is an array containing each integer from <span style={{ fontFamily: 'KaTeX_Main, "Times New Roman", serif' }}>1</span> to <i style={{ fontFamily: 'KaTeX_Math, "Times New Roman", serif', fontSize: '15px' }}>n</i> exactly once.
-                      The <em>Manhattan value</em> of a permutation <i style={{ fontFamily: 'KaTeX_Math, "Times New Roman", serif', fontSize: '15px' }}>p</i> is defined as:
+                      A permutation <i>p</i> of length <i>n</i> is an array containing each integer from 1 to <i>n</i> exactly once.
+                      The <em>Manhattan value</em> of a permutation <i>p</i> is defined as:
                     </p>
 
                     <div
-                      style={{
-                        padding: '12px 18px',
-                        background: 'rgba(255, 255, 255, 0.04)',
-                        borderRadius: 8,
-                        fontFamily: '"Times New Roman", Cambria, serif',
-                        fontSize: 18,
-                        letterSpacing: '0.04em',
-                        textAlign: 'center',
-                        color: config.accentColor,
-                      }}
+                      className="math-formula-box"
+                      style={{ color: config.accentColor }}
                     >
-                      <i>S</i>(<i>p</i>) = <span style={{ fontSize: '20px' }}>&sum;</span><sub style={{ fontSize: '11px' }}><i>i</i>=1</sub><sup style={{ fontSize: '11px' }}><i>n</i></sup> |<i>p</i><sub><i>i</i></sub> &minus; <i>i</i>|
+                      <i>S</i>(<i>p</i>) = &sum;<sub><i>i</i>=1</sub><sup><i>n</i></sup> |<i>p</i><sub><i>i</i></sub> &minus; <i>i</i>|
                     </div>
 
-                    <p>
-                      Given <i style={{ fontFamily: 'KaTeX_Math, "Times New Roman", serif', fontSize: '15px' }}>n</i> and <i style={{ fontFamily: 'KaTeX_Math, "Times New Roman", serif', fontSize: '15px' }}>k</i>, determine if there exists a permutation <i style={{ fontFamily: 'KaTeX_Math, "Times New Roman", serif', fontSize: '15px' }}>p</i> of length <i style={{ fontFamily: 'KaTeX_Math, "Times New Roman", serif', fontSize: '15px' }}>n</i> such that <i>S</i>(<i>p</i>) = <i>k</i>.
-                      If such a permutation exists, output <code style={{ color: config.accentColor, fontWeight: 600 }}>Yes</code> followed by the permutation.
+                    <p className="text-secondary">
+                      Given <i>n</i> and <i>k</i>, determine if there exists a permutation <i>p</i> of length <i>n</i> such that <i>S</i>(<i>p</i>) = <i>k</i>.
+                      If such a permutation exists, output <code className="inline-code" style={{ color: config.accentColor }}>Yes</code> followed by the permutation.
                     </p>
 
                     <div className="sample-box">
                       <div className="sample-head">
-                        <span>Sample 1 Input</span>
+                        <span>Sample 1 Input &amp; Output</span>
                         <button
+                          type="button"
+                          className="btn-copy-sample"
                           onClick={handleCopySample}
-                          style={{
-                            background: 'none',
-                            border: 'none',
-                            color: copied ? '#4ade80' : '#94a3b8',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 4,
-                            fontSize: 11,
-                          }}
+                          title="Copy testcase"
                         >
                           <Copy size={11} />
                           <span>{copied ? 'Copied' : 'Copy'}</span>
                         </button>
                       </div>
-                      <pre className="sample-code" style={{ fontFamily: `'${config.fontFamily}', monospace` }}>
-                        4{"\n"}1 2 4 3
+                      <pre
+                        className="sample-code"
+                        style={{ fontFamily: `'${config.fontFamily}', Consolas, monospace` }}
+                      >
+Input:{"\n"}2{"\n"}3 2{"\n"}4 4{"\n\n"}Output:{"\n"}Yes{"\n"}2 1 3{"\n"}Yes{"\n"}4 2 3 1
                       </pre>
                     </div>
                   </div>
                 </div>
 
-                {/* Code Editor Preview Panel */}
+                {/* Codeforces Solution Code Panel */}
                 <div
-                  className="preview-panel"
+                  className="preview-panel editor-panel"
                   style={{
                     backgroundColor: previewCardBg,
-                    backdropFilter: 'blur(16px)',
+                    borderColor: previewCardBorder,
                   }}
                 >
-                  <div className="editor-tabs">
+                  <div className="editor-tab-bar">
                     <div
                       className="editor-tab active"
                       style={{
@@ -875,21 +923,19 @@ Explanation: Because nums[0] + nums[1] == 9, we return [0, 1].
                         color: config.accentColor,
                       }}
                     >
-                      <Code2 size={13} />
+                      <Code2 size={12} />
                       <span>solution.cpp</span>
                     </div>
-                    <span style={{ fontSize: 11, color: '#64748b', marginLeft: 'auto' }}>
-                      C++20 (GCC 13-64)
-                    </span>
+                    <span className="editor-lang-tag">C++20 (GCC 13-64)</span>
                   </div>
 
                   <div className="code-editor-box">
                     <div
                       className="editor-content-area"
-                      style={{ fontFamily: `'${config.fontFamily}', monospace` }}
+                      style={{ fontFamily: `'${config.fontFamily}', Consolas, monospace` }}
                     >
-                      <div className="line-numbers">
-                        {Array.from({ length: 18 }, (_, i) => (
+                      <div className="line-numbers" aria-hidden="true">
+                        {Array.from({ length: 15 }, (_, i) => (
                           <div key={i + 1}>{i + 1}</div>
                         ))}
                       </div>
@@ -901,14 +947,13 @@ Explanation: Because nums[0] + nums[1] == 9, we return [0, 1].
                         <div><span className="code-type">void</span> <span className="code-fn">solve</span>() &#123;</div>
                         <div>    <span className="code-type">long long</span> n, k;</div>
                         <div>    cin &gt;&gt; n &gt;&gt; k;</div>
-                        <div>    <span className="code-comment">// Manhattan value must be even</span></div>
+                        <div>    <span className="code-comment">// Manhattan sum must be even</span></div>
                         <div>    <span className="code-keyword">if</span> (k % <span className="code-num">2</span> != <span className="code-num">0</span>) &#123;</div>
                         <div>        cout &lt;&lt; <span className="code-string">"No\n"</span>;</div>
                         <div>        <span className="code-keyword">return</span>;</div>
                         <div>    &#125;</div>
                         <div>    vector&lt;<span className="code-type">int</span>&gt; p(n + <span className="code-num">1</span>);</div>
                         <div>    iota(p.begin(), p.end(), <span className="code-num">0</span>);</div>
-                        <div>    <span className="code-comment">// Construct maximal swaps</span></div>
                         <div>    cout &lt;&lt; <span className="code-string">"Yes\n"</span>;</div>
                         <div>&#125;</div>
                       </div>
@@ -918,9 +963,9 @@ Explanation: Because nums[0] + nums[1] == 9, we return [0, 1].
               </div>
             )}
 
-            {/* Bottom Clarification */}
+            {/* Subtle Guidance Footer */}
             <div className="disclaimer-banner">
-              Interactive Studio Preview • Real-time theme customization for LeetCode & Codeforces • Changes persist automatically
+              ThemeFlow Studio provides real-time workspace theming for LeetCode &amp; Codeforces. Background wallpapers create subtle environment atmosphere without degrading syntax readability.
             </div>
           </div>
         </main>
