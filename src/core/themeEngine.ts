@@ -119,6 +119,8 @@ export class ThemeEngine {
     root.style.setProperty('--tf-toolbar-bg', toolbarBg);
     root.style.setProperty('--tf-text-primary', textPrimary);
     root.style.setProperty('--tf-text-secondary', textSecondary);
+    root.style.setProperty('--tf-text-muted', config.mode === 'light' ? '#6b7280' : '#94a3b8');
+    root.style.setProperty('--tf-link', config.mode === 'light' ? '#2563eb' : '#7dd3fc');
     root.style.setProperty('--tf-border', border);
     root.style.setProperty('--tf-accent', config.accentColor);
     root.style.setProperty('--tf-accent-glow', `${config.accentColor}44`);
