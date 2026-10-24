@@ -4,12 +4,14 @@ import { playAcceptedSound, playRejectedSound } from '../../audio/soundPlayer';
 
 export class LeetCodeAdapter {
   private observer: MutationObserver | null = null;
+  private htmlObserver: MutationObserver | null = null;
   private alertedVerdicts = new Set<string>();
   private quickPill: HTMLElement | null = null;
   private weAddedDarkClass = false;
 
   public init(settings: UserSettings): void {
     this.syncNativeThemeState(settings);
+    this.initHtmlObserver(settings);
     this.initVerdictWatcher(settings);
     if (settings.quickSwitchVisible && settings.enabled) {
       this.renderQuickPill(settings.currentConfig);
@@ -23,6 +25,25 @@ export class LeetCodeAdapter {
     } else {
       this.renderQuickPill(settings.currentConfig);
     }
+  }
+
+  private initHtmlObserver(settings: UserSettings): void {
+    if (this.htmlObserver) return;
+
+    this.htmlObserver = new MutationObserver(() => {
+      if (settings.enabled && settings.currentConfig.mode !== 'light') {
+        if (!document.documentElement.classList.contains('dark')) {
+          document.documentElement.classList.add('dark');
+          document.documentElement.setAttribute('data-theme', 'dark');
+          this.weAddedDarkClass = true;
+        }
+      }
+    });
+
+    this.htmlObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class', 'data-theme'],
+    });
   }
 
   private syncNativeThemeState(settings: UserSettings): void {
@@ -145,6 +166,10 @@ export class LeetCodeAdapter {
     if (this.observer) {
       this.observer.disconnect();
       this.observer = null;
+    }
+    if (this.htmlObserver) {
+      this.htmlObserver.disconnect();
+      this.htmlObserver = null;
     }
     this.removeQuickPill();
     if (this.weAddedDarkClass) {

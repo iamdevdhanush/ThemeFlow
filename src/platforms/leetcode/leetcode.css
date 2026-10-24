@@ -20,6 +20,66 @@
   --tf-card-radius: 8px;
 }
 
+/* Background layers */
+#themeflow-bg-layer {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: -9999 !important;
+  background-size: cover !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  pointer-events: none !important;
+  transition: opacity 0.3s ease, filter 0.3s ease !important;
+}
+
+#themeflow-overlay-layer {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: -9998 !important;
+  pointer-events: none !important;
+  transition: background-color 0.3s ease !important;
+}
+
+/* Floating Quick Toggle Pill */
+#themeflow-quick-pill {
+  position: fixed !important;
+  bottom: 24px !important;
+  right: 24px !important;
+  z-index: 999999 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  background: rgba(18, 18, 26, 0.88) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 9999px !important;
+  padding: 6px 12px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+  cursor: pointer !important;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease !important;
+  user-select: none !important;
+}
+
+#themeflow-quick-pill:hover {
+  transform: translateY(-2px) !important;
+  border-color: var(--tf-accent) !important;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6), 0 0 16px var(--tf-accent-glow) !important;
+}
+
+#themeflow-quick-pill svg {
+  width: 16px !important;
+  height: 16px !important;
+  color: var(--tf-accent) !important;
+}
+
+#themeflow-quick-pill .tf-pill-text {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #f1f5f9 !important;
+}
+
 /* --------------------------------------------------------------------------
    1. Base & Main Layout Overrides
    -------------------------------------------------------------------------- */

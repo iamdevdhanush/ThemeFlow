@@ -1,110 +1,331 @@
-/* ThemeFlow LeetCode Scoped Stylesheet */
+/* ==========================================================================
+   ThemeFlow LeetCode Scoped Stylesheet
+   Coordinated Theme System for LeetCode Workspace
+   ========================================================================== */
 
 :root {
-  --tf-accent: #a78bfa;
-  --tf-accent-glow: rgba(167, 139, 250, 0.35);
-  --tf-bg-card: rgba(18, 18, 26, 0.82);
-  --tf-bg-card-hover: rgba(26, 26, 38, 0.9);
-  --tf-border-color: rgba(255, 255, 255, 0.08);
+  --tf-page-bg: transparent;
+  --tf-panel-bg: rgba(20, 20, 28, 0.85);
+  --tf-panel-secondary: rgba(15, 15, 22, 0.92);
+  --tf-editor-bg: rgba(13, 13, 19, 0.94);
+  --tf-toolbar-bg: rgba(18, 18, 25, 0.88);
   --tf-text-primary: #f3f4f6;
   --tf-text-secondary: #9ca3af;
+  --tf-border: rgba(255, 255, 255, 0.08);
+  --tf-accent: #a78bfa;
+  --tf-accent-glow: rgba(167, 139, 250, 0.35);
+  --tf-success: #4ade80;
+  --tf-error: #f87171;
   --tf-code-font: 'JetBrains Mono', Consolas, 'Courier New', monospace;
+  --tf-card-radius: 8px;
 }
 
-/* LeetCode Base and Container Overrides */
+/* Background layers */
+#themeflow-bg-layer {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: -9999 !important;
+  background-size: cover !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  pointer-events: none !important;
+  transition: opacity 0.3s ease, filter 0.3s ease !important;
+}
+
+#themeflow-overlay-layer {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: -9998 !important;
+  pointer-events: none !important;
+  transition: background-color 0.3s ease !important;
+}
+
+/* Floating Quick Toggle Pill */
+#themeflow-quick-pill {
+  position: fixed !important;
+  bottom: 24px !important;
+  right: 24px !important;
+  z-index: 999999 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  background: rgba(18, 18, 26, 0.88) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 9999px !important;
+  padding: 6px 12px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+  cursor: pointer !important;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease !important;
+  user-select: none !important;
+}
+
+#themeflow-quick-pill:hover {
+  transform: translateY(-2px) !important;
+  border-color: var(--tf-accent) !important;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6), 0 0 16px var(--tf-accent-glow) !important;
+}
+
+#themeflow-quick-pill svg {
+  width: 16px !important;
+  height: 16px !important;
+  color: var(--tf-accent) !important;
+}
+
+#themeflow-quick-pill .tf-pill-text {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #f1f5f9 !important;
+}
+
+/* --------------------------------------------------------------------------
+   1. Base & Main Layout Overrides
+   -------------------------------------------------------------------------- */
 html.themeflow-leetcode,
 body.themeflow-leetcode {
-  background-color: transparent !important;
+  background-color: var(--tf-page-bg) !important;
   background-image: none !important;
   color: var(--tf-text-primary) !important;
+  min-height: 100vh !important;
 }
 
 body.themeflow-leetcode #__next,
-body.themeflow-leetcode main {
+body.themeflow-leetcode main,
+body.themeflow-leetcode div[id^="__next"] {
   background-color: transparent !important;
 }
 
-/* LeetCode CSS variable overrides */
+/* Override LeetCode Native CSS Variables across the entire page */
 body.themeflow-leetcode {
   --layer-bg: transparent !important;
   --layer-0: transparent !important;
-  --layer-1: var(--tf-bg-card) !important;
-  --layer-2: var(--tf-bg-card) !important;
+  --layer-1: var(--tf-panel-bg) !important;
+  --layer-2: var(--tf-panel-secondary) !important;
   --layer-3: rgba(255, 255, 255, 0.05) !important;
-  --bg-overlay-1: var(--tf-bg-card) !important;
-  --bg-overlay-2: var(--tf-bg-card) !important;
+  --bg-overlay-1: var(--tf-panel-bg) !important;
+  --bg-overlay-2: var(--tf-panel-secondary) !important;
   --bg-overlay-3: rgba(255, 255, 255, 0.06) !important;
+  --text-primary: var(--tf-text-primary) !important;
+  --text-secondary: var(--tf-text-secondary) !important;
+  --border-quaternary: var(--tf-border) !important;
+  --border-tertiary: var(--tf-border) !important;
+  --fill-quaternary: var(--tf-panel-secondary) !important;
+  --fill-3: var(--tf-panel-secondary) !important;
 }
 
-/* Navbar */
+/* --------------------------------------------------------------------------
+   2. FlexLayout Workbench Surfaces (Panels, Tabs, Splitters)
+   -------------------------------------------------------------------------- */
+body.themeflow-leetcode .flexlayout__layout {
+  background-color: transparent !important;
+}
+
+body.themeflow-leetcode .flexlayout__tab {
+  background-color: var(--tf-panel-bg) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border: 1px solid var(--tf-border) !important;
+  border-radius: var(--tf-card-radius) !important;
+  color: var(--tf-text-primary) !important;
+  overflow: hidden !important;
+}
+
+body.themeflow-leetcode .flexlayout__tabset {
+  background-color: var(--tf-panel-secondary) !important;
+  border-bottom: 1px solid var(--tf-border) !important;
+}
+
+body.themeflow-leetcode .flexlayout__tabset_header {
+  background-color: var(--tf-panel-secondary) !important;
+  border-bottom: 1px solid var(--tf-border) !important;
+}
+
+body.themeflow-leetcode .flexlayout__tab_button {
+  background-color: transparent !important;
+  color: var(--tf-text-secondary) !important;
+  border-bottom: 2px solid transparent !important;
+  transition: all 0.15s ease !important;
+}
+
+body.themeflow-leetcode .flexlayout__tab_button:hover {
+  color: var(--tf-text-primary) !important;
+}
+
+body.themeflow-leetcode .flexlayout__tab_button--selected {
+  background-color: transparent !important;
+  color: var(--tf-accent) !important;
+  border-bottom: 2px solid var(--tf-accent) !important;
+  font-weight: 600 !important;
+}
+
+/* Drag Splitters between panels */
+body.themeflow-leetcode .flexlayout__splitter {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+  transition: background-color 0.2s ease !important;
+}
+
+body.themeflow-leetcode .flexlayout__splitter:hover,
+body.themeflow-leetcode .flexlayout__splitter--drag {
+  background-color: var(--tf-accent) !important;
+}
+
+/* LeetCode custom layout wrappers */
+body.themeflow-leetcode div[data-layout-path] {
+  background-color: var(--tf-panel-bg) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border: 1px solid var(--tf-border) !important;
+  border-radius: var(--tf-card-radius) !important;
+}
+
+/* --------------------------------------------------------------------------
+   3. Top Navbar & Global Header
+   -------------------------------------------------------------------------- */
 body.themeflow-leetcode nav,
 body.themeflow-leetcode #navbar,
-body.themeflow-leetcode header {
-  background: var(--tf-bg-card) !important;
-  backdrop-filter: blur(14px) !important;
-  -webkit-backdrop-filter: blur(14px) !important;
-  border-bottom: 1px solid var(--tf-border-color) !important;
+body.themeflow-leetcode header,
+body.themeflow-leetcode div[role="navigation"] {
+  background-color: var(--tf-toolbar-bg) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border-bottom: 1px solid var(--tf-border) !important;
+  color: var(--tf-text-primary) !important;
 }
 
-/* Workbench Panes & Split Layout */
-body.themeflow-leetcode div[data-layout-path],
+body.themeflow-leetcode nav a,
+body.themeflow-leetcode header a {
+  color: var(--tf-text-primary) !important;
+}
+
+body.themeflow-leetcode nav button,
+body.themeflow-leetcode header button {
+  color: var(--tf-text-secondary) !important;
+}
+
+body.themeflow-leetcode nav button:hover,
+body.themeflow-leetcode header button:hover {
+  color: var(--tf-text-primary) !important;
+}
+
+/* --------------------------------------------------------------------------
+   4. Code Editor Toolbar, Container & Status Bar
+   -------------------------------------------------------------------------- */
+/* Toolbar holding language picker (C++), Auto, Format, Settings */
+body.themeflow-leetcode div[class*="editor"] div:has(> button),
+body.themeflow-leetcode div:has(> button[aria-label="Run"]),
+body.themeflow-leetcode div[class*="bg-layer-1"] div:has(> button:first-child),
+body.themeflow-leetcode div[class*="flex"][class*="items-center"][class*="justify-between"]:has(button) {
+  background-color: var(--tf-toolbar-bg) !important;
+  border-bottom: 1px solid var(--tf-border) !important;
+  color: var(--tf-text-primary) !important;
+}
+
+/* Neutralize white backgrounds on utility containers in editor pane */
+body.themeflow-leetcode div[class*="bg-white"],
 body.themeflow-leetcode div[class*="bg-layer-1"],
-body.themeflow-leetcode div[class*="bg-layer-2"],
-body.themeflow-leetcode div[class*="bg-fill-2"],
-body.themeflow-leetcode div[class*="bg-fill-3"] {
-  background: var(--tf-bg-card) !important;
-  backdrop-filter: blur(14px) !important;
-  -webkit-backdrop-filter: blur(14px) !important;
-  border: 1px solid var(--tf-border-color) !important;
+body.themeflow-leetcode div[class*="bg-layer-2"] {
+  background-color: var(--tf-panel-bg) !important;
+  color: var(--tf-text-primary) !important;
 }
 
-/* Monaco Code Editor */
+/* Editor toolbar buttons & language dropdown trigger */
+body.themeflow-leetcode button[class*="text-text-secondary"],
+body.themeflow-leetcode button[class*="dark:text-text-secondary"] {
+  color: var(--tf-text-secondary) !important;
+  background-color: transparent !important;
+}
+
+body.themeflow-leetcode button[class*="text-text-secondary"]:hover,
+body.themeflow-leetcode button[class*="dark:text-text-secondary"]:hover {
+  color: var(--tf-text-primary) !important;
+  background-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Monaco Code Editor Area */
 body.themeflow-leetcode .monaco-editor,
-body.themeflow-leetcode .monaco-editor-background {
-  background: rgba(14, 14, 20, 0.88) !important;
+body.themeflow-leetcode .monaco-editor.vs,
+body.themeflow-leetcode .monaco-editor.vs-dark,
+body.themeflow-leetcode .monaco-editor-background,
+body.themeflow-leetcode .monaco-editor .overflow-guard {
+  background-color: var(--tf-editor-bg) !important;
   backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
 }
 
+/* Line Numbers & Gutter */
 body.themeflow-leetcode .monaco-editor .margin,
 body.themeflow-leetcode .monaco-editor .glyph-margin {
-  background: rgba(10, 10, 15, 0.92) !important;
-  border-right: 1px solid var(--tf-border-color) !important;
+  background-color: var(--tf-panel-secondary) !important;
+  border-right: 1px solid var(--tf-border) !important;
 }
 
 body.themeflow-leetcode .monaco-editor .line-numbers {
   color: #64748b !important;
 }
 
-/* Problem Description & Content */
+body.themeflow-leetcode .monaco-editor .current-line {
+  background-color: rgba(255, 255, 255, 0.035) !important;
+  border: none !important;
+}
+
+/* Default unstyled editor text color in case of light mode tokens */
+body.themeflow-leetcode .monaco-editor .view-line {
+  color: var(--tf-text-primary) !important;
+  font-family: var(--tf-code-font) !important;
+}
+
+/* Code Editor Status Bar (bottom right 'Saved', 'Ln 1, Col 1') */
+body.themeflow-leetcode div[class*="text-xs"]:has(span:contains("Saved")),
+body.themeflow-leetcode div[class*="text-xs"]:has(span:contains("Ln")),
+body.themeflow-leetcode div[class*="justify-between"][class*="text-xs"],
+body.themeflow-leetcode div[class*="border-t"]:has(span) {
+  background-color: var(--tf-panel-secondary) !important;
+  border-top: 1px solid var(--tf-border) !important;
+  color: var(--tf-text-secondary) !important;
+}
+
+/* --------------------------------------------------------------------------
+   5. Problem Description Pane (Tabs, Content, Tags, Math, Examples)
+   -------------------------------------------------------------------------- */
 body.themeflow-leetcode div[data-track-load="description_content"],
 body.themeflow-leetcode .elfjS {
   color: var(--tf-text-primary) !important;
   line-height: 1.65 !important;
+  font-size: 14.5px !important;
 }
 
 body.themeflow-leetcode h4[class*="text-title"],
-body.themeflow-leetcode div[class*="text-title"] {
+body.themeflow-leetcode div[class*="text-title"],
+body.themeflow-leetcode a[href*="/problems/"][class*="text-title"] {
   color: var(--tf-accent) !important;
+  font-weight: 700 !important;
   text-shadow: 0 0 16px var(--tf-accent-glow) !important;
 }
 
-/* Code Blocks & Examples */
-body.themeflow-leetcode pre,
-body.themeflow-leetcode code,
-body.themeflow-leetcode .example-block,
-body.themeflow-leetcode div[class*="example-block"] {
-  background: rgba(10, 10, 16, 0.88) !important;
-  border: 1px solid var(--tf-border-color) !important;
-  border-radius: 8px !important;
-  color: #38bdf8 !important;
-  font-family: var(--tf-code-font) !important;
+/* Topic tags, hint chips, company chips */
+body.themeflow-leetcode div[class*="rounded-full"],
+body.themeflow-leetcode span[class*="rounded-full"],
+body.themeflow-leetcode [aria-label="Topics"],
+body.themeflow-leetcode [aria-label="Companies"],
+body.themeflow-leetcode [aria-label="Hint"] {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid var(--tf-border) !important;
+  color: var(--tf-text-secondary) !important;
+}
+
+body.themeflow-leetcode [aria-label="Topics"]:hover,
+body.themeflow-leetcode [aria-label="Hint"]:hover {
+  color: var(--tf-accent) !important;
+  border-color: var(--tf-accent) !important;
 }
 
 /* Difficulty Badges */
 body.themeflow-leetcode .text-olive,
 body.themeflow-leetcode [class*="text-olive"],
 body.themeflow-leetcode .text-easy {
-  color: #4ade80 !important;
+  color: var(--tf-success) !important;
 }
 
 body.themeflow-leetcode .text-yellow,
@@ -118,30 +339,157 @@ body.themeflow-leetcode [class*="text-pink"],
 body.themeflow-leetcode .text-red,
 body.themeflow-leetcode [class*="text-red"],
 body.themeflow-leetcode .text-hard {
-  color: #f87171 !important;
+  color: var(--tf-error) !important;
 }
 
-/* Problemset List & Tables */
-body.themeflow-leetcode [role="row"],
-body.themeflow-leetcode div[role="table"] {
-  border-color: var(--tf-border-color) !important;
+/* Code Blocks & Example containers */
+body.themeflow-leetcode pre,
+body.themeflow-leetcode code,
+body.themeflow-leetcode .example-block,
+body.themeflow-leetcode div[class*="example-block"] {
+  background-color: rgba(10, 10, 16, 0.88) !important;
+  border: 1px solid var(--tf-border) !important;
+  border-radius: 8px !important;
+  color: #38bdf8 !important;
+  font-family: var(--tf-code-font) !important;
+  line-height: 1.5 !important;
 }
 
-body.themeflow-leetcode [role="row"]:hover {
-  background: rgba(255, 255, 255, 0.04) !important;
+/* --------------------------------------------------------------------------
+   6. Testcase and Test Result Panel
+   -------------------------------------------------------------------------- */
+body.themeflow-leetcode div[class*="bg-layer-2"],
+body.themeflow-leetcode div[class*="bg-fill-quaternary"],
+body.themeflow-leetcode div[class*="bg-fill-3"] {
+  background-color: var(--tf-panel-secondary) !important;
+  border-color: var(--tf-border) !important;
+  color: var(--tf-text-primary) !important;
 }
 
-/* Verdict Results */
+/* Case 1, Case 2 tabs inside testcase console */
+body.themeflow-leetcode button[class*="rounded"]:has(span:contains("Case")),
+body.themeflow-leetcode div:has(> button:contains("Case")) {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid var(--tf-border) !important;
+  color: var(--tf-text-secondary) !important;
+}
+
+body.themeflow-leetcode button[class*="rounded"]:has(span:contains("Case")):hover,
+body.themeflow-leetcode button[class*="bg-fill-secondary"] {
+  background-color: rgba(167, 139, 250, 0.15) !important;
+  color: var(--tf-accent) !important;
+  border-color: var(--tf-accent) !important;
+}
+
+/* Inputs & textareas inside Testcase editor */
+body.themeflow-leetcode textarea,
+body.themeflow-leetcode input[type="text"] {
+  background-color: rgba(10, 10, 16, 0.9) !important;
+  color: var(--tf-text-primary) !important;
+  border: 1px solid var(--tf-border) !important;
+  border-radius: 6px !important;
+  outline: none !important;
+}
+
+body.themeflow-leetcode textarea:focus,
+body.themeflow-leetcode input[type="text"]:focus {
+  border-color: var(--tf-accent) !important;
+  box-shadow: 0 0 0 2px var(--tf-accent-glow) !important;
+}
+
+/* --------------------------------------------------------------------------
+   7. Buttons, Dropdowns, Popovers & Dialogs
+   -------------------------------------------------------------------------- */
+body.themeflow-leetcode button[aria-label="Run"] {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+  color: var(--tf-text-primary) !important;
+  border: 1px solid var(--tf-border) !important;
+  border-radius: 6px !important;
+  transition: all 0.15s ease !important;
+}
+
+body.themeflow-leetcode button[aria-label="Run"]:hover {
+  background-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+body.themeflow-leetcode button[aria-label="Submit"] {
+  background-color: var(--tf-accent) !important;
+  color: #0c0c14 !important;
+  font-weight: 600 !important;
+  border: none !important;
+  border-radius: 6px !important;
+  box-shadow: 0 2px 10px var(--tf-accent-glow) !important;
+  transition: all 0.15s ease !important;
+}
+
+body.themeflow-leetcode button[aria-label="Submit"]:hover {
+  opacity: 0.9 !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Dropdown menus, language popovers, settings dialogs */
+body.themeflow-leetcode [role="menu"],
+body.themeflow-leetcode [role="listbox"],
+body.themeflow-leetcode [role="dialog"],
+body.themeflow-leetcode div[class*="popover"],
+body.themeflow-leetcode div[data-radix-popper-content-wrapper] > div {
+  background-color: var(--tf-panel-secondary) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid var(--tf-border) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+  border-radius: 8px !important;
+  color: var(--tf-text-primary) !important;
+}
+
+body.themeflow-leetcode [role="menuitem"],
+body.themeflow-leetcode [role="option"] {
+  color: var(--tf-text-secondary) !important;
+  transition: all 0.1s ease !important;
+}
+
+body.themeflow-leetcode [role="menuitem"]:hover,
+body.themeflow-leetcode [role="option"]:hover,
+body.themeflow-leetcode [role="option"][aria-selected="true"] {
+  background-color: rgba(167, 139, 250, 0.15) !important;
+  color: var(--tf-accent) !important;
+}
+
+/* --------------------------------------------------------------------------
+   8. Submission Verdicts & Status
+   -------------------------------------------------------------------------- */
 body.themeflow-leetcode [data-e2e-locator="submission-result"],
 body.themeflow-leetcode .text-green-s,
-body.themeflow-leetcode [class*="text-green-s"] {
-  color: #4ade80 !important;
+body.themeflow-leetcode [class*="text-green-s"],
+body.themeflow-leetcode [class*="text-green-60"] {
+  color: var(--tf-success) !important;
   font-weight: 700 !important;
   text-shadow: 0 0 12px rgba(74, 222, 128, 0.45) !important;
 }
 
 body.themeflow-leetcode .text-red-s,
 body.themeflow-leetcode [class*="text-red-s"] {
-  color: #f87171 !important;
+  color: var(--tf-error) !important;
   font-weight: 700 !important;
+}
+
+/* --------------------------------------------------------------------------
+   9. Scrollbars
+   -------------------------------------------------------------------------- */
+body.themeflow-leetcode ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+body.themeflow-leetcode ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+body.themeflow-leetcode ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+
+body.themeflow-leetcode ::-webkit-scrollbar-thumb:hover {
+  background: var(--tf-accent);
 }
