@@ -1,5 +1,5 @@
 import { UserSettings, ThemeConfig } from '../../types/theme';
-import { fireAcceptedCelebration } from '../../effects/celebration';
+import { fireAcceptedCelebration, stopAcceptedCelebration } from '../../effects/celebration';
 import { playAcceptedSound, playRejectedSound } from '../../audio/soundPlayer';
 
 export class CodeforcesAdapter {
@@ -190,6 +190,7 @@ export class CodeforcesAdapter {
   }
 
   public destroy(): void {
+    stopAcceptedCelebration();
     if (this.observer) {
       this.observer.disconnect();
       this.observer = null;

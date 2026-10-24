@@ -1,19 +1,19 @@
 /**
  * ThemeFlow Signature Anime Impact Frame & Victory Celebration
  * 
- * A handcrafted, high-performance success animation sequence inspired by
- * anime impact frames and modern rhythm-game victory treatments.
+ * A handcrafted, high-performance success sequence inspired by
+ * anime impact frames, manga action lines, and modern rhythm-game victory treatments.
  * 
  * Sequence Lifecycle:
- * 1. Impact (0-200ms): Manga-style speed-line slash burst originating from verdict.
- * 2. Victory (200-900ms): Sleek glowing emerald chamfered ACCEPTED badge with shimmer sweep.
- * 3. Release (900-1800ms): Floating energy sparks and ethereal shards that drift and dissolve.
+ * 1. Impact (0-200ms): Manga-style speed-line slash burst & cross-slash localized around verdict.
+ * 2. Victory (200-900ms): Sleek chamfered obsidian-emerald ACCEPTED badge with diagonal highlight sweep.
+ * 3. Release (900-1800ms): Lightweight floating energy shards and sparks drifting naturally.
  * 4. Cleanup (by 2000ms): Full DOM and memory release, restoring pristine page state.
  * 
- * Performance & UX:
- * - Pure vanilla DOM + SVG + Canvas; zero external runtime dependencies.
- * - Entire overlay is pointer-events: none; never blocks clicks, typing, or scrolling.
+ * Non-blocking & Accessible:
+ * - Entire container and children are pointer-events: none; never blocks clicks, typing, or scrolling.
  * - Strictly respects prefers-reduced-motion.
+ * - Zero external animation libraries or remote assets.
  */
 
 export interface CelebrationOptions {
@@ -24,17 +24,28 @@ export interface CelebrationOptions {
 
 let activeCelebrationTeardown: (() => void) | null = null;
 
-export function fireAcceptedCelebration(options: CelebrationOptions = {}): void {
-  // Respect reduced motion
-  if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    return;
-  }
-
-  // Cancel any currently running celebration to prevent overlapping animations
+/**
+ * Immediately cancels and cleans up any currently active celebration.
+ * Safe to call at any time (e.g. during page navigation or component teardown).
+ */
+export function stopAcceptedCelebration(): void {
   if (activeCelebrationTeardown) {
     activeCelebrationTeardown();
     activeCelebrationTeardown = null;
   }
+}
+
+/**
+ * Triggers the signature ThemeFlow anime impact celebration sequence.
+ */
+export function fireAcceptedCelebration(options: CelebrationOptions = {}): void {
+  // Respect user preference for reduced motion
+  if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    return;
+  }
+
+  // Cancel any running celebration to prevent overlapping animations
+  stopAcceptedCelebration();
 
   const {
     anchorElement = null,
@@ -42,7 +53,7 @@ export function fireAcceptedCelebration(options: CelebrationOptions = {}): void 
     verdictText = 'ACCEPTED',
   } = options;
 
-  // Calculate center of animation
+  // Calculate center coordinates for the impact burst
   let originX = window.innerWidth / 2;
   let originY = window.innerHeight * 0.42;
 
@@ -74,17 +85,17 @@ export function fireAcceptedCelebration(options: CelebrationOptions = {}): void 
   });
 
   // Inject scoped keyframes if not already present
-  ensureStyles();
+  ensureCelebrationStyles();
 
-  // 1. Create SVG Impact Slash Burst (0-240ms)
+  // 1. Create SVG Impact Burst & Cross-Slashes (0-220ms)
   const impactSvg = createImpactBurstSvg(originX, originY, themeAccent);
   container.appendChild(impactSvg);
 
-  // 2. Create Compact Glowing Victory Badge (200-1800ms)
+  // 2. Create Compact Glowing Victory Badge (180-1800ms)
   const victoryBadge = createVictoryBadge(originX, originY, verdictText, themeAccent);
   container.appendChild(victoryBadge);
 
-  // 3. Create Lightweight Particle Spark Canvas (300-1800ms)
+  // 3. Create Lightweight Particle Spark Canvas (200-1800ms)
   const canvas = document.createElement('canvas');
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
@@ -100,27 +111,30 @@ export function fireAcceptedCelebration(options: CelebrationOptions = {}): void 
 
   document.body.appendChild(container);
 
-  // Particle System
+  // Particle System Simulation
   let animId: number | null = null;
+  let isCleanedUp = false;
   const ctx = canvas.getContext('2d');
   const particles = spawnParticles(originX, originY, themeAccent);
   const startTime = performance.now();
 
   function render(now: number) {
+    if (isCleanedUp) return;
     const elapsed = now - startTime;
     if (!ctx) return;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     if (elapsed > 180) {
-      const progress = Math.min(1, (elapsed - 180) / 1600);
+      const progress = Math.min(1, (elapsed - 180) / 1620);
       for (const p of particles) {
         p.x += p.vx;
         p.y += p.vy;
-        p.vy += 0.04; // Gentle gravity
-        p.vx *= 0.985; // Drag
+        p.vy -= 0.035; // Gentle upward atmospheric buoyancy
+        p.vx *= 0.982; // Drag
+        p.vy *= 0.982;
         p.rotation += p.rotSpeed;
-        p.alpha = Math.max(0, 1 - Math.pow(progress, 1.4));
+        p.alpha = Math.max(0, 1 - Math.pow(progress, 1.35));
 
         ctx.save();
         ctx.translate(p.x, p.y);
@@ -128,12 +142,13 @@ export function fireAcceptedCelebration(options: CelebrationOptions = {}): void 
         ctx.globalAlpha = p.alpha * p.baseAlpha;
 
         if (p.shape === 'shard') {
+          // Elongated manga energy shard / diamond
           ctx.fillStyle = p.color;
           ctx.beginPath();
-          ctx.moveTo(-p.size, 0);
-          ctx.lineTo(0, -p.size * 2.2);
-          ctx.lineTo(p.size, 0);
-          ctx.lineTo(0, p.size * 2.2);
+          ctx.moveTo(-p.size * 0.7, 0);
+          ctx.lineTo(0, -p.size * 2.4);
+          ctx.lineTo(p.size * 0.7, 0);
+          ctx.lineTo(0, p.size * 2.4);
           ctx.closePath();
           ctx.fill();
         } else {
@@ -142,7 +157,7 @@ export function fireAcceptedCelebration(options: CelebrationOptions = {}): void 
           ctx.arc(0, 0, p.size, 0, Math.PI * 2);
           ctx.fillStyle = p.color;
           ctx.shadowColor = p.color;
-          ctx.shadowBlur = 8;
+          ctx.shadowBlur = 6;
           ctx.fill();
         }
         ctx.restore();
@@ -156,8 +171,10 @@ export function fireAcceptedCelebration(options: CelebrationOptions = {}): void 
 
   animId = requestAnimationFrame(render);
 
-  // Teardown handler
+  // Complete teardown handler
   const teardown = () => {
+    if (isCleanedUp) return;
+    isCleanedUp = true;
     if (animId !== null) {
       cancelAnimationFrame(animId);
       animId = null;
@@ -165,17 +182,19 @@ export function fireAcceptedCelebration(options: CelebrationOptions = {}): void 
     if (container.parentNode) {
       container.parentNode.removeChild(container);
     }
-    activeCelebrationTeardown = null;
+    if (activeCelebrationTeardown === teardown) {
+      activeCelebrationTeardown = null;
+    }
   };
 
   activeCelebrationTeardown = teardown;
 
-  // Auto cleanup at 2000ms
-  setTimeout(teardown, 2000);
+  // Auto-cleanup by 2000ms
+  setTimeout(teardown, 1980);
 }
 
 /**
- * Creates anime-style radial speed lines & slash burst
+ * Creates anime-style radial speed lines, triangular shards & cross-slash burst
  */
 function createImpactBurstSvg(cx: number, cy: number, accentColor: string): SVGSVGElement {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -186,17 +205,38 @@ function createImpactBurstSvg(cx: number, cy: number, accentColor: string): SVGS
     left: '0',
     width: '100%',
     height: '100%',
-    animation: 'tfImpactFadeOut 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+    animation: 'tfImpactFadeOut 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards',
   });
 
-  const numSlashes = 12;
-  const innerRadius = 18;
-  const outerRadius = 140;
+  // Localized soft radial glow around verdict (no full-screen flash!)
+  const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+  defs.innerHTML = `
+    <radialGradient id="tf-impact-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#4ade80" stop-opacity="0.32" />
+      <stop offset="45%" stop-color="${accentColor}" stop-opacity="0.16" />
+      <stop offset="100%" stop-color="#10b981" stop-opacity="0" />
+    </radialGradient>
+  `;
+  svg.appendChild(defs);
+
+  // Localized burst aura circle
+  const aura = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  aura.setAttribute('cx', cx.toFixed(1));
+  aura.setAttribute('cy', cy.toFixed(1));
+  aura.setAttribute('r', '140');
+  aura.setAttribute('fill', 'url(#tf-impact-glow)');
+  aura.style.animation = 'tfAuraExpand 0.24s cubic-bezier(0.1, 0.8, 0.2, 1) forwards';
+  svg.appendChild(aura);
+
+  // Manga speed-line slashes radiating outwards
+  const numSlashes = 14;
+  const innerRadius = 20;
+  const outerRadius = 150;
 
   for (let i = 0; i < numSlashes; i++) {
-    const angle = (i * (360 / numSlashes) + (Math.random() * 12 - 6)) * (Math.PI / 180);
-    const lengthMult = 0.75 + Math.random() * 0.5;
-    const r1 = innerRadius + Math.random() * 12;
+    const angle = (i * (360 / numSlashes) + (Math.random() * 14 - 7)) * (Math.PI / 180);
+    const lengthMult = 0.75 + Math.random() * 0.55;
+    const r1 = innerRadius + Math.random() * 10;
     const r2 = outerRadius * lengthMult;
 
     const x1 = cx + Math.cos(angle) * r1;
@@ -216,15 +256,38 @@ function createImpactBurstSvg(cx: number, cy: number, accentColor: string): SVGS
     svg.appendChild(line);
   }
 
+  // Cross-cutting katana energy blades (anime impact slash)
+  const slash1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  slash1.setAttribute('x1', (cx - 100).toFixed(1));
+  slash1.setAttribute('y1', (cy - 35).toFixed(1));
+  slash1.setAttribute('x2', (cx + 100).toFixed(1));
+  slash1.setAttribute('y2', (cy + 35).toFixed(1));
+  slash1.setAttribute('stroke', '#ffffff');
+  slash1.setAttribute('stroke-width', '2.5');
+  slash1.setAttribute('stroke-linecap', 'round');
+  slash1.style.animation = 'tfCrossSlash 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards';
+  svg.appendChild(slash1);
+
+  const slash2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  slash2.setAttribute('x1', (cx - 70).toFixed(1));
+  slash2.setAttribute('y1', (cy + 40).toFixed(1));
+  slash2.setAttribute('x2', (cx + 70).toFixed(1));
+  slash2.setAttribute('y2', (cy - 40).toFixed(1));
+  slash2.setAttribute('stroke', '#4ade80');
+  slash2.setAttribute('stroke-width', '2');
+  slash2.setAttribute('stroke-linecap', 'round');
+  slash2.style.animation = 'tfCrossSlash 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards';
+  svg.appendChild(slash2);
+
   // Central shock ring
   const ring = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
   ring.setAttribute('cx', cx.toFixed(1));
   ring.setAttribute('cy', cy.toFixed(1));
-  ring.setAttribute('r', '24');
+  ring.setAttribute('r', '20');
   ring.setAttribute('fill', 'none');
   ring.setAttribute('stroke', '#4ade80');
   ring.setAttribute('stroke-width', '2.5');
-  ring.style.animation = 'tfShockRing 0.35s cubic-bezier(0.1, 0.8, 0.2, 1) forwards';
+  ring.style.animation = 'tfShockRing 0.32s cubic-bezier(0.1, 0.8, 0.2, 1) forwards';
   svg.appendChild(ring);
 
   return svg;
@@ -244,15 +307,17 @@ function createVictoryBadge(cx: number, cy: number, text: string, accentColor: s
     display: 'flex',
     alignItems: 'center',
     gap: '12px',
-    padding: '10px 22px',
-    background: 'linear-gradient(135deg, rgba(10, 18, 14, 0.94) 0%, rgba(14, 22, 18, 0.96) 100%)',
-    border: '1.5px solid #4ade80',
-    borderRadius: '12px',
-    boxShadow: `0 0 28px rgba(74, 222, 128, 0.45), 0 12px 40px rgba(0, 0, 0, 0.7), inset 0 0 16px rgba(74, 222, 128, 0.15)`,
+    padding: '9px 20px',
+    background: 'linear-gradient(135deg, rgba(8, 16, 12, 0.95) 0%, rgba(12, 22, 16, 0.97) 100%)',
+    border: '1.5px solid #22c55e',
+    borderRadius: '10px',
+    clipPath: 'polygon(8px 0%, calc(100% - 8px) 0%, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0% calc(100% - 8px), 0% 8px)',
+    boxShadow: `0 0 28px rgba(34, 197, 94, 0.45), 0 10px 32px rgba(0, 0, 0, 0.75), inset 0 0 14px rgba(74, 222, 128, 0.18)`,
     backdropFilter: 'blur(16px)',
     WebkitBackdropFilter: 'blur(16px)',
-    animation: 'tfBadgePop 1.9s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+    animation: 'tfBadgePop 1.85s cubic-bezier(0.16, 1, 0.3, 1) forwards',
     overflow: 'hidden',
+    userSelect: 'none',
   });
 
   // Highlight sweep overlay
@@ -260,9 +325,9 @@ function createVictoryBadge(cx: number, cy: number, text: string, accentColor: s
   Object.assign(sweep.style, {
     position: 'absolute',
     inset: '0',
-    background: 'linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.35) 50%, transparent 100%)',
+    background: 'linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.5) 45%, rgba(74, 222, 128, 0.4) 55%, transparent 100%)',
     transform: 'translateX(-150%) skewX(-25deg)',
-    animation: 'tfHighlightSweep 0.9s 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+    animation: 'tfHighlightSweep 0.85s 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards',
     pointerEvents: 'none',
   });
   badge.appendChild(sweep);
@@ -281,13 +346,13 @@ function createVictoryBadge(cx: number, cy: number, text: string, accentColor: s
     flexShrink: '0',
   });
   iconWrap.innerHTML = `
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#062414" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#052011" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
       <polyline points="20 6 9 17 4 12"></polyline>
     </svg>
   `;
   badge.appendChild(iconWrap);
 
-  // Text content
+  // Text content column
   const textCol = document.createElement('div');
   Object.assign(textCol.style, {
     display: 'flex',
@@ -296,9 +361,16 @@ function createVictoryBadge(cx: number, cy: number, text: string, accentColor: s
     lineHeight: '1.2',
   });
 
-  const subLabel = document.createElement('span');
-  subLabel.textContent = 'THEMEFLOW VERDICT';
+  const subLabel = document.createElement('div');
   Object.assign(subLabel.style, {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+  });
+
+  const subText = document.createElement('span');
+  subText.textContent = 'THEMEFLOW // VERDICT';
+  Object.assign(subText.style, {
     fontFamily: "'JetBrains Mono', Consolas, monospace",
     fontSize: '9.5px',
     fontWeight: '700',
@@ -306,6 +378,19 @@ function createVictoryBadge(cx: number, cy: number, text: string, accentColor: s
     color: '#86efac',
     textTransform: 'uppercase',
   });
+  subLabel.appendChild(subText);
+
+  // Theme accent pip indicating dynamic integration
+  const accentPip = document.createElement('span');
+  Object.assign(accentPip.style, {
+    width: '5px',
+    height: '5px',
+    borderRadius: '50%',
+    backgroundColor: accentColor,
+    boxShadow: `0 0 6px ${accentColor}`,
+    display: 'inline-block',
+  });
+  subLabel.appendChild(accentPip);
 
   const mainLabel = document.createElement('span');
   mainLabel.textContent = text;
@@ -313,9 +398,9 @@ function createVictoryBadge(cx: number, cy: number, text: string, accentColor: s
     fontFamily: "'JetBrains Mono', Consolas, monospace",
     fontSize: '17px',
     fontWeight: '800',
-    letterSpacing: '0.14em',
+    letterSpacing: '0.15em',
     color: '#ffffff',
-    textShadow: '0 0 12px rgba(74, 222, 128, 0.5)',
+    textShadow: '0 0 12px rgba(74, 222, 128, 0.55)',
   });
 
   textCol.appendChild(subLabel);
@@ -342,17 +427,17 @@ interface Particle {
 function spawnParticles(cx: number, cy: number, accentColor: string): Particle[] {
   const particles: Particle[] = [];
   const palette = ['#4ade80', '#86efac', '#38bdf8', accentColor, '#ffffff'];
-  const count = 22; // Restrained count for elegance
+  const count = 20; // Lightweight, restrained count for elegance without clutter
 
   for (let i = 0; i < count; i++) {
     const angle = Math.random() * Math.PI * 2;
-    const speed = 1.2 + Math.random() * 3.4;
+    const speed = 1.0 + Math.random() * 3.2;
     particles.push({
-      x: cx + (Math.random() - 0.5) * 40,
-      y: cy + (Math.random() - 0.5) * 20,
+      x: cx + (Math.random() - 0.5) * 36,
+      y: cy + (Math.random() - 0.5) * 18,
       vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed - 1.2, // Initial upward lift
-      size: 2.5 + Math.random() * 3.5,
+      vy: Math.sin(angle) * speed - 0.8, // Initial gentle impulse
+      size: 2.2 + Math.random() * 3.0,
       color: palette[Math.floor(Math.random() * palette.length)],
       shape: Math.random() > 0.4 ? 'shard' : 'spark',
       rotation: Math.random() * Math.PI * 2,
@@ -365,7 +450,7 @@ function spawnParticles(cx: number, cy: number, accentColor: string): Particle[]
   return particles;
 }
 
-function ensureStyles(): void {
+function ensureCelebrationStyles(): void {
   if (document.getElementById('themeflow-celebration-keyframes')) return;
 
   const style = document.createElement('style');
@@ -385,14 +470,39 @@ function ensureStyles(): void {
       }
     }
 
+    @keyframes tfCrossSlash {
+      0% {
+        stroke-dasharray: 0 200;
+        opacity: 0;
+      }
+      30% {
+        opacity: 1;
+      }
+      100% {
+        stroke-dasharray: 200 0;
+        opacity: 0;
+      }
+    }
+
+    @keyframes tfAuraExpand {
+      0% {
+        r: 30px;
+        opacity: 0.9;
+      }
+      100% {
+        r: 150px;
+        opacity: 0;
+      }
+    }
+
     @keyframes tfShockRing {
       0% {
-        r: 12px;
+        r: 10px;
         opacity: 1;
         stroke-width: 4px;
       }
       100% {
-        r: 120px;
+        r: 110px;
         opacity: 0;
         stroke-width: 0.5px;
       }
@@ -400,33 +510,33 @@ function ensureStyles(): void {
 
     @keyframes tfImpactFadeOut {
       0% { opacity: 1; }
-      70% { opacity: 0.9; }
+      75% { opacity: 0.9; }
       100% { opacity: 0; }
     }
 
     @keyframes tfBadgePop {
       0% {
-        transform: translate(-50%, -50%) scale(0.65);
+        transform: translate(-50%, -50%) scale(0.7);
         opacity: 0;
-        filter: blur(6px);
+        filter: blur(5px);
       }
-      18% {
-        transform: translate(-50%, -50%) scale(1.06);
+      16% {
+        transform: translate(-50%, -50%) scale(1.05);
         opacity: 1;
         filter: blur(0px);
       }
-      30% {
+      28% {
         transform: translate(-50%, -50%) scale(1.0);
         opacity: 1;
       }
-      82% {
+      80% {
         transform: translate(-50%, -50%) scale(1.0);
         opacity: 1;
       }
       100% {
-        transform: translate(-50%, -50%) scale(0.92);
+        transform: translate(-50%, -50%) scale(0.94);
         opacity: 0;
-        filter: blur(4px);
+        filter: blur(3px);
       }
     }
 

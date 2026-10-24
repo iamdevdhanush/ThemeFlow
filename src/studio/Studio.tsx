@@ -36,7 +36,7 @@ import {
   getCustomImageFromDB,
 } from '../storage/storage';
 import { playAcceptedSound, playRejectedSound } from '../audio/soundPlayer';
-import { fireAcceptedCelebration } from '../effects/confetti';
+import { fireAcceptedCelebration, stopAcceptedCelebration } from '../effects/celebration';
 import { EffectManager } from '../effects/particles';
 import './Studio.css';
 
@@ -183,9 +183,10 @@ export const Studio: React.FC = () => {
     }
   };
 
-  const handleSimulateAc = () => {
+  const handleSimulateAc = (e?: React.MouseEvent<HTMLElement>) => {
     if (config.confettiEnabled) {
       fireAcceptedCelebration({
+        anchorElement: e?.currentTarget || null,
         themeAccent: config.accentColor,
         verdictText: 'ACCEPTED',
       });
@@ -568,7 +569,7 @@ export const Studio: React.FC = () => {
                   checked={config.confettiEnabled}
                   onChange={(e) => updateConfig({ confettiEnabled: e.target.checked })}
                 />
-                <span>Confetti on Accepted Verdict</span>
+                <span>Anime Impact Celebration on Accepted Verdict</span>
               </label>
             </div>
           </div>
