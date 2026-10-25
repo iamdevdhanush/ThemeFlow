@@ -73,6 +73,7 @@ class MockElement {
       lineTo() {},
       closePath() {},
       fill() {},
+      stroke() {},
     };
   }
 
@@ -465,22 +466,33 @@ await test('LeetCode: SPA navigation or adapter.destroy() cleans up active celeb
 });
 
 // 11. Bounded container dimensions and non-interfering isolation
-await test('Celebration uses strictly bounded 420x180 container with overflow hidden (NO full-viewport overlay)', () => {
+await test('Celebration uses strictly bounded region container with overflow hidden (NO full-viewport overlay)', () => {
   mockDocBody.children = [];
   fireAcceptedCelebration({ verdictText: 'ACCEPTED' });
 
   const container = mockDocBody.children.find(c => c.id === 'themeflow-anime-celebration');
   assert.ok(container, 'Celebration container exists');
-  assert.strictEqual(container.style.width, '420px', 'Container width must be exactly 420px');
-  assert.strictEqual(container.style.height, '180px', 'Container height must be exactly 180px');
+  const w = parseFloat(container.style.width);
+  const h = parseFloat(container.style.height);
+  assert.ok(w > 0 && w < 1920, `Container width (${w}) must be strictly bounded and not full-viewport (1920)`);
+  assert.ok(h > 0 && h < 1080, `Container height (${h}) must be strictly bounded and not full-viewport (1080)`);
   assert.strictEqual(container.style.overflow, 'hidden', 'Container must have overflow: hidden to clip effects');
   assert.strictEqual(container.style.position, 'fixed', 'Container must have position: fixed');
 
-  // Verify canvas inside container is also sized to 420x180
+  // Verify backdrop, SVG, canvas, and victory reveal exist inside container
+  const backdrop = container.children.find(c => c.className === 'tf-domain-dim');
+  assert.ok(backdrop, 'Domain dimming backdrop must exist');
+
+  const svg = container.children.find(c => c.tagName === 'SVG');
+  assert.ok(svg, 'Energy slash SVG layer must exist');
+
   const canvas = container.children.find(c => c.tagName === 'CANVAS');
-  assert.ok(canvas, 'Canvas shard layer exists');
-  assert.strictEqual(canvas.width, 420, 'Canvas must be bounded to 420px');
-  assert.strictEqual(canvas.height, 180, 'Canvas must be bounded to 180px');
+  assert.ok(canvas, 'Canvas shard layer must exist');
+  assert.strictEqual(canvas.width, w, 'Canvas must match bounded container width');
+  assert.strictEqual(canvas.height, h, 'Canvas must match bounded container height');
+
+  const victory = container.children.find(c => c.className === 'tf-domain-victory');
+  assert.ok(victory, 'Victory reveal centerpiece must exist');
 
   stopAcceptedCelebration();
 });
@@ -505,11 +517,11 @@ await test('Celebration clamps positioning safely within viewport when anchor is
   const container = mockDocBody.children.find(c => c.id === 'themeflow-anime-celebration');
   assert.ok(container);
   
-  // Center should be clamped: boxW is 420, half is 210, + 12px margin = 222px minimum left
+  // Left and top should be clamped with >= 12px margin
   const leftVal = parseFloat(container.style.left);
   const topVal = parseFloat(container.style.top);
-  assert.ok(leftVal >= 222, `Left position (${leftVal}) must be clamped >= 222px to avoid clipping off-screen`);
-  assert.ok(topVal >= 102, `Top position (${topVal}) must be clamped >= 102px to avoid clipping off-screen`);
+  assert.ok(leftVal >= 12, `Left position (${leftVal}) must be clamped >= 12px to avoid bleeding off-screen`);
+  assert.ok(topVal >= 12, `Top position (${topVal}) must be clamped >= 12px to avoid bleeding off-screen`);
 
   stopAcceptedCelebration();
 });

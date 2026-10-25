@@ -4,6 +4,14 @@ import { getSettings, subscribeToSettingsChanges } from '../storage/storage';
 import { ThemeEngine } from '../core/themeEngine';
 import { LeetCodeAdapter } from '../platforms/leetcode/leetcodeAdapter';
 import { CodeforcesAdapter } from '../platforms/codeforces/codeforcesAdapter';
+import { fireAcceptedCelebration, stopAcceptedCelebration } from '../effects/celebration';
+
+if (typeof window !== 'undefined') {
+  (window as any).__THEMEFLOW_CELEBRATION__ = {
+    fireAcceptedCelebration,
+    stopAcceptedCelebration,
+  };
+}
 
 const themeEngine = new ThemeEngine();
 let leetcodeAdapter: LeetCodeAdapter | null = null;
