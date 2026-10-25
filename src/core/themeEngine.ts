@@ -11,24 +11,29 @@ export class ThemeEngine {
     this.effectManager = new EffectManager();
   }
 
-  private ensureLayers(): { bgLayer: HTMLElement; overlayLayer: HTMLElement } {
-    const target = document.body;
+  public ensureLayers(): { bgLayer: HTMLElement; overlayLayer: HTMLElement } {
+    const target = document.body || document.documentElement;
+
+    // Prepend overlay layer first, then background layer so background is lowest in DOM
+    if (!this.overlayLayer || !this.overlayLayer.parentNode) {
+      this.overlayLayer = document.getElementById('themeflow-overlay-layer');
+      if (!this.overlayLayer && target) {
+        this.overlayLayer = document.createElement('div');
+        this.overlayLayer.id = 'themeflow-overlay-layer';
+        this.overlayLayer.setAttribute('aria-hidden', 'true');
+        this.overlayLayer.style.pointerEvents = 'none';
+        target.prepend(this.overlayLayer);
+      }
+    }
 
     if (!this.bgLayer || !this.bgLayer.parentNode) {
       this.bgLayer = document.getElementById('themeflow-bg-layer');
       if (!this.bgLayer && target) {
         this.bgLayer = document.createElement('div');
         this.bgLayer.id = 'themeflow-bg-layer';
+        this.bgLayer.setAttribute('aria-hidden', 'true');
+        this.bgLayer.style.pointerEvents = 'none';
         target.prepend(this.bgLayer);
-      }
-    }
-
-    if (!this.overlayLayer || !this.overlayLayer.parentNode) {
-      this.overlayLayer = document.getElementById('themeflow-overlay-layer');
-      if (!this.overlayLayer && target) {
-        this.overlayLayer = document.createElement('div');
-        this.overlayLayer.id = 'themeflow-overlay-layer';
-        target.prepend(this.overlayLayer);
       }
     }
 
@@ -138,12 +143,16 @@ export class ThemeEngine {
     bgLayer.style.filter = `brightness(${config.brightness}%) contrast(${config.contrast}%) blur(${config.blur}px)`;
     overlayLayer.style.backgroundColor = overlayColor;
 
-    // Verify image loading; if broken, cleanly fallback to default preset image
+    // Verify image loading with diagnostic reporting
     const preloader = new Image();
-    preloader.onerror = () => {
-      console.warn(`[ThemeFlow] Wallpaper failed to load: ${imgUrl}. Using fallback.`);
+    preloader.onload = () => {
+      console.log(`[ThemeFlow] Active wallpaper verified and loaded successfully: ${imgUrl}`);
+    };
+    preloader.onerror = (e) => {
+      console.warn(`[ThemeFlow] Wallpaper failed to load from: "${imgUrl}". Falling back to default Cosmic Void asset. Error:`, e);
       if (typeof chrome !== 'undefined' && chrome.runtime?.getURL) {
-        bgLayer.style.backgroundImage = `url("${chrome.runtime.getURL('IMAGES/galaxy.jpg')}")`;
+        const fallbackUrl = chrome.runtime.getURL('IMAGES/galaxy.jpg');
+        bgLayer.style.backgroundImage = `url("${fallbackUrl}")`;
       }
     };
     preloader.src = imgUrl;

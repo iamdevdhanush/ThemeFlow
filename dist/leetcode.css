@@ -96,41 +96,24 @@
 }
 
 /* --------------------------------------------------------------------------
-   1. Base & Main Layout Overrides
+   1. Base & Main Layout Overrides (Comprehensive Page-Level Transparency)
    -------------------------------------------------------------------------- */
 html.themeflow-leetcode,
-body.themeflow-leetcode {
-  background-color: var(--tf-page-bg) !important;
+html.themeflow-active,
+body.themeflow-leetcode,
+body.themeflow-active {
+  background-color: transparent !important;
   background-image: none !important;
   color: var(--tf-text-primary) !important;
   min-height: 100vh !important;
 }
 
-body.themeflow-leetcode #__next,
-body.themeflow-leetcode main,
-body.themeflow-leetcode div[id^="__next"],
-body.themeflow-leetcode div[class*="bg-layer-"],
-body.themeflow-leetcode div[class*="bg-dark-layer-"],
-body.themeflow-leetcode div[class*="dark:bg-dark-layer-"],
-body.themeflow-leetcode div[class*="bg-body"],
-body.themeflow-leetcode div[class*="dark:bg-body"] {
-  background-color: transparent !important;
-}
-
-/* Glassmorphic Top Navigation Header */
-body.themeflow-leetcode nav,
-body.themeflow-leetcode header,
-body.themeflow-leetcode [role="navigation"],
-body.themeflow-leetcode div[class*="nav-"],
-body.themeflow-leetcode #navbar {
-  background-color: var(--tf-toolbar-bg) !important;
-  backdrop-filter: blur(14px) !important;
-  -webkit-backdrop-filter: blur(14px) !important;
-  border-bottom: 1px solid var(--tf-border) !important;
-}
-
-/* Override LeetCode Native CSS Variables across the entire page */
-body.themeflow-leetcode {
+/* Override LeetCode Native CSS Variables across html, :root, body and dark container */
+:root,
+html.themeflow-leetcode,
+body.themeflow-leetcode,
+html.themeflow-leetcode [data-theme="dark"],
+html.dark.themeflow-leetcode {
   --layer-bg: transparent !important;
   --layer-0: transparent !important;
   --layer-1: var(--tf-panel-bg) !important;
@@ -145,6 +128,58 @@ body.themeflow-leetcode {
   --border-tertiary: var(--tf-border) !important;
   --fill-quaternary: var(--tf-panel-secondary) !important;
   --fill-3: var(--tf-panel-secondary) !important;
+}
+
+/* Ensure all page-level layout wrappers sit transparently above the wallpaper layer */
+body.themeflow-leetcode #__next,
+body.themeflow-leetcode main,
+body.themeflow-leetcode #qd-content,
+body.themeflow-leetcode div[id^="__next"],
+body.themeflow-leetcode #__next > div,
+body.themeflow-leetcode #__next > div > div,
+body.themeflow-leetcode #qd-content > div,
+body.themeflow-leetcode .flexlayout__layout,
+body.themeflow-leetcode div[data-layout-path="/0"],
+body.themeflow-leetcode div[data-layout-path="0"],
+body.themeflow-leetcode div[class*="bg-layer-bg"],
+body.themeflow-leetcode div[class*="dark:bg-dark-layer-bg"],
+body.themeflow-leetcode div[class*="dark:bg-layer-bg"],
+body.themeflow-leetcode div[class*="bg-layer-0"],
+body.themeflow-leetcode div[class*="dark:bg-layer-0"],
+body.themeflow-leetcode div[class*="bg-dark-layer-0"],
+body.themeflow-leetcode div[class*="dark:bg-dark-layer-0"],
+body.themeflow-leetcode div[class*="bg-body"],
+body.themeflow-leetcode div[class*="dark:bg-body"],
+body.themeflow-leetcode div[class*="bg-dark-body"],
+body.themeflow-leetcode div[class*="dark:bg-dark-body"],
+body.themeflow-leetcode div[class*="bg-paper"],
+body.themeflow-leetcode div[class*="dark:bg-paper"],
+body.themeflow-leetcode div[class*="bg-dark-backdrop"],
+body.themeflow-leetcode div[class*="dark:bg-dark-backdrop"],
+body.themeflow-leetcode div[class*="bg-gray-900"],
+body.themeflow-leetcode div[class*="dark:bg-gray-900"],
+body.themeflow-leetcode div[class*="bg-neutral-900"],
+body.themeflow-leetcode div[class*="dark:bg-neutral-900"],
+body.themeflow-leetcode div[class*="bg-black"],
+body.themeflow-leetcode div[class*="dark:bg-black"],
+body.themeflow-leetcode div[class*="bg-[#1a1a1a]"],
+body.themeflow-leetcode div[class*="dark:bg-[#1a1a1a]"],
+body.themeflow-leetcode div[class*="bg-[#282828]"],
+body.themeflow-leetcode div[class*="dark:bg-[#282828]"] {
+  background-color: transparent !important;
+  background: transparent !important;
+}
+
+/* Glassmorphic Top Navigation Header */
+body.themeflow-leetcode nav,
+body.themeflow-leetcode header,
+body.themeflow-leetcode [role="navigation"],
+body.themeflow-leetcode div[class*="nav-"],
+body.themeflow-leetcode #navbar {
+  background-color: var(--tf-toolbar-bg) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border-bottom: 1px solid var(--tf-border) !important;
 }
 
 /* --------------------------------------------------------------------------
@@ -203,8 +238,8 @@ body.themeflow-leetcode .flexlayout__splitter--drag {
   background-color: var(--tf-accent) !important;
 }
 
-/* LeetCode custom layout wrappers */
-body.themeflow-leetcode div[data-layout-path] {
+/* LeetCode custom layout wrappers (exclude root layout containers) */
+body.themeflow-leetcode div[data-layout-path]:not([data-layout-path="/0"]):not([data-layout-path="0"]):not([data-layout-path=""]):not(#qd-content) {
   background-color: var(--tf-panel-bg) !important;
   backdrop-filter: blur(14px) !important;
   -webkit-backdrop-filter: blur(14px) !important;
@@ -254,10 +289,13 @@ body.themeflow-leetcode div[class*="flex"][class*="items-center"][class*="justif
   color: var(--tf-text-primary) !important;
 }
 
-/* Neutralize white backgrounds on utility containers in editor pane */
-body.themeflow-leetcode div[class*="bg-white"],
-body.themeflow-leetcode div[class*="bg-layer-1"],
-body.themeflow-leetcode div[class*="bg-layer-2"] {
+/* Neutralize white backgrounds on utility containers inside editor and tab panels */
+body.themeflow-leetcode .flexlayout__tab div[class*="bg-white"],
+body.themeflow-leetcode .flexlayout__tab div[class*="bg-layer-1"],
+body.themeflow-leetcode .flexlayout__tab div[class*="bg-layer-2"],
+body.themeflow-leetcode div[class*="editor"] div[class*="bg-white"],
+body.themeflow-leetcode div[class*="editor"] div[class*="bg-layer-1"],
+body.themeflow-leetcode div[class*="editor"] div[class*="bg-layer-2"] {
   background-color: var(--tf-panel-bg) !important;
   color: var(--tf-text-primary) !important;
 }

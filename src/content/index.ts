@@ -31,9 +31,14 @@ async function initMultiPlatform() {
   // Apply shared theme engine
   await themeEngine.apply(settings, platformClass);
 
+  const reapply = async () => {
+    const current = await getSettings();
+    await themeEngine.apply(current, platformClass);
+  };
+
   // Initialize platform adapter
   if (leetcodeAdapter) {
-    leetcodeAdapter.init(settings);
+    leetcodeAdapter.init(settings, reapply);
   } else if (codeforcesAdapter) {
     codeforcesAdapter.init(settings);
   }

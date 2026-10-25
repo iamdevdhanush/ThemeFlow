@@ -16,9 +16,16 @@ export class LeetCodeAdapter {
   private boundKeyHandler: ((e: KeyboardEvent) => void) | null = null;
   private boundPopstateHandler: (() => void) | null = null;
   private lastUrl = '';
+  private currentSettings: UserSettings | null = null;
+  private reapplyCallback: (() => Promise<void>) | null = null;
 
-  public init(settings: UserSettings): void {
-    this.lastUrl = window.location.href;
+  public init(settings: UserSettings, reapplyCallback?: () => Promise<void>): void {
+    this.currentSettings = settings;
+    if (reapplyCallback) {
+      this.reapplyCallback = reapplyCallback;
+    }
+    this.lastUrl = typeof window !== 'undefined' ? window.location.href : '';
+    this.ensureThemeClasses(settings);
     this.recordExistingVerdictsBaseline();
     this.attachSubmissionListeners();
     this.attachNavigationListeners();
@@ -31,11 +38,28 @@ export class LeetCodeAdapter {
   }
 
   public update(settings: UserSettings): void {
+    this.currentSettings = settings;
+    this.ensureThemeClasses(settings);
     this.syncNativeThemeState(settings);
     if (!settings.enabled || !settings.quickSwitchVisible) {
       this.removeQuickPill();
     } else {
       this.renderQuickPill(settings.currentConfig);
+    }
+  }
+
+  /**
+   * Resiliently enforces themeflow-active and themeflow-leetcode classes on both html and body
+   * preventing Next.js hydration or client router from stripping theme classes.
+   */
+  public ensureThemeClasses(settings: UserSettings): void {
+    if (!settings.enabled || typeof document === 'undefined') return;
+
+    if (document.documentElement && !document.documentElement.classList.contains('themeflow-leetcode')) {
+      document.documentElement.classList.add('themeflow-active', 'themeflow-leetcode');
+    }
+    if (document.body && !document.body.classList.contains('themeflow-leetcode')) {
+      document.body.classList.add('themeflow-active', 'themeflow-leetcode');
     }
   }
 
@@ -126,31 +150,61 @@ export class LeetCodeAdapter {
   }
 
   private handleUrlChange(): void {
-    if (window.location.href !== this.lastUrl) {
+    if (typeof window !== 'undefined' && window.location.href !== this.lastUrl) {
       this.lastUrl = window.location.href;
       stopAcceptedCelebration();
       this.cancelPendingSubmission();
       this.recordExistingVerdictsBaseline();
+
+      // Ensure theme classes and background layers persist across SPA route transitions
+      if (this.currentSettings && this.currentSettings.enabled) {
+        this.ensureThemeClasses(this.currentSettings);
+        if (this.reapplyCallback) {
+          this.reapplyCallback().catch((err) => {
+            console.warn('[ThemeFlow] SPA reapply warning:', err);
+          });
+        }
+        if (this.currentSettings.quickSwitchVisible) {
+          this.renderQuickPill(this.currentSettings.currentConfig);
+        }
+      }
     }
   }
 
   private initHtmlObserver(settings: UserSettings): void {
     if (this.htmlObserver) return;
 
-    this.htmlObserver = new MutationObserver(() => {
-      if (settings.enabled && settings.currentConfig.mode !== 'light') {
+    const enforceTheme = () => {
+      const active = this.currentSettings || settings;
+      if (!active.enabled) return;
+      this.ensureThemeClasses(active);
+
+      if (active.currentConfig.mode !== 'light' && typeof document !== 'undefined' && document.documentElement) {
         if (!document.documentElement.classList.contains('dark')) {
           document.documentElement.classList.add('dark');
           document.documentElement.setAttribute('data-theme', 'dark');
           this.weAddedDarkClass = true;
         }
       }
+    };
+
+    this.htmlObserver = new MutationObserver(() => {
+      enforceTheme();
     });
 
-    this.htmlObserver.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class', 'data-theme'],
-    });
+    if (typeof document !== 'undefined' && document.documentElement) {
+      this.htmlObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class', 'data-theme'],
+      });
+    }
+
+    if (typeof document !== 'undefined' && document.body) {
+      this.htmlObserver.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class'],
+      });
+    }
   }
 
   private syncNativeThemeState(settings: UserSettings): void {
