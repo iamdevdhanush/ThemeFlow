@@ -1,25 +1,23 @@
 /**
- * ThemeFlow — Signature Anime Impact "Domain Expansion" Celebration Engine
+ * ThemeFlow — SEAM: Cinematic Anime Acceptance Animation
  * 
- * Creative Direction: "Domain Expansion"
- * High-octane manga impact frames, dramatic dimensional backdrop, massive multi-layer
- * diagonal energy slash, expanding shockwave rings, directional shard burst, and a bold,
- * authoritative victory reveal.
+ * Master Motion Sequence: 8-Frame Storyboard Implementation
+ * - Frame 01 (0.00–0.30s): TENSION — Subtle workspace desaturation, corner ink gather, hairline tremor.
+ * - Frame 02 (0.30–0.40s): THE CUT — Brilliant white-hot diagonal slash (BL to TR) with violet-cyan fringe.
+ * - Frame 03 (0.40–0.48s): IMPACT FRAME — High-contrast B&W manga impact frame with radial ink speed rays & 3px jolt.
+ * - Frame 04 (0.48–0.90s): THE SEAM OPENS — Incision widens like parted paper with 20 directional kinetic sparks.
+ * - Frame 05 (0.90–1.10s): THE REVEAL — Tapered black sumi-e ink-brush stroke with crisp ACCEPTED typography & vermillion AC seal.
+ * - Frame 06 (1.10–1.70s): VICTORY HOLD — Held composition, delicate light sweep along the slash/lettering.
+ * - Frame 07 (1.70–2.00s): RESOLUTION — Brush stroke cleaves along cut diagonal and slides away, seam retracts.
+ * - Frame 08 (2.00–2.20s): BACK TO NORMAL — Complete teardown, 100% page restoration with 0 layout shifts.
  * 
- * Core Architectural Principles:
- * 1. Test Result Region Anchored: Targets and bounds the celebration strictly to the
- *    enclosing Test Result panel (or deliberate fallback). Does not cover code editor or navigation.
- * 2. Localized Dimensional Dimming: Briefly dims ONLY the immediate celebration region
- *    with a dark obsidian-emerald aura, providing immense contrast for the neon effects.
- * 3. High-Visibility Multi-Layer Slash: 3-layer diagonal energy blade (18px neon flare + 7px core
- *    + incandescent white blade + traveling comet head) spanning the entire region.
- * 4. Observable Expanding Shockwaves: Primary emerald shockwave + compression echo ripple
- *    expanding smoothly outward from the impact focal point.
- * 5. Directional Shard Kinetics: Sharp diamond shards launched along shockwave vectors with
- *    aerodynamic drag and motion vectors.
- * 6. Hero Victory Reveal: Clean, commanding typography (32px bold ACCEPTED) + glowing vector
- *    checkmark seal with diagonal glint sweep. Zero miniature HUD clutter or tiny labels.
- * 7. Clean Lifecycle & Restoration: 1.8–2.0s duration with complete teardown, 0 layout shifts.
+ * Strict Palette:
+ * - Charcoal black: #0C0D10
+ * - Deep charcoal: #14161B
+ * - Paper white: #F8FAFC
+ * - Violet accent: #8B5CF6
+ * - Cyan accent: #06B6D4
+ * - Vermillion seal: #E11D48
  */
 
 export interface CelebrationOptions {
@@ -41,137 +39,62 @@ export function stopAcceptedCelebration(): void {
 }
 
 /**
- * Calculates the bounding rectangle of the Test Result region or stable fallback.
- */
-function resolveCelebrationRegion(anchorElement: HTMLElement | null, winW: number, winH: number): {
-  rect: { left: number; top: number; width: number; height: number };
-  focusX: number;
-  focusY: number;
-} {
-  let targetPanel: HTMLElement | null = null;
-  let anchorRect: DOMRect | null = null;
-
-  if (anchorElement && typeof anchorElement.getBoundingClientRect === 'function') {
-    anchorRect = anchorElement.getBoundingClientRect();
-    if (typeof anchorElement.closest === 'function') {
-      targetPanel = anchorElement.closest(
-        '.flexlayout__tab, [data-layout-path*="console"], [data-layout-path*="result"], [class*="tab-pane"], [class*="result-pane"], [class*="submission-result"], [data-layout-path]'
-      ) || anchorElement.closest('div[class*="container"], [class*="panel"], [class*="content"]') || anchorElement.parentElement;
-    }
-  }
-
-  let regionLeft = 0;
-  let regionTop = 0;
-  let regionW = 0;
-  let regionH = 0;
-
-  // Case 1: Enclosing Test Result panel found with reasonable size
-  if (targetPanel && typeof targetPanel.getBoundingClientRect === 'function') {
-    const pRect = targetPanel.getBoundingClientRect();
-    if (pRect.width >= 280 && pRect.height >= 140 && pRect.left < winW && pRect.top < winH) {
-      regionW = Math.round(Math.min(pRect.width, winW - 32));
-      regionH = Math.round(Math.min(pRect.height, winH - 32));
-      regionLeft = Math.round(pRect.left);
-      regionTop = Math.round(pRect.top);
-    }
-  }
-
-  // Case 2: Anchor element available (e.g. the verdict span itself)
-  if (regionW === 0 && anchorRect && anchorRect.width > 0 && anchorRect.height > 0) {
-    regionW = Math.round(Math.min(Math.max(anchorRect.width * 2.4, 560), winW - 32));
-    regionH = Math.round(Math.min(Math.max(anchorRect.height * 4.0, 300), winH - 32));
-    regionLeft = Math.round(anchorRect.left + anchorRect.width / 2 - regionW / 2);
-    regionTop = Math.round(anchorRect.top + anchorRect.height / 2 - regionH / 2);
-  }
-
-  // Case 3: Stable deliberate fallback
-  if (regionW === 0) {
-    regionW = Math.round(Math.min(620, winW - 32));
-    regionH = Math.round(Math.min(320, winH - 40));
-    regionLeft = Math.round((winW - regionW) / 2);
-    regionTop = Math.round(Math.min(winH * 0.35, 260));
-  }
-
-  // Viewport bounds clamp to prevent bleeding off-screen
-  regionLeft = Math.max(12, Math.min(winW - regionW - 12, regionLeft));
-  regionTop = Math.max(12, Math.min(winH - regionH - 12, regionTop));
-
-  // Determine local focal point (cx, cy) inside the region
-  let focusX = regionW / 2;
-  let focusY = regionH / 2;
-
-  if (anchorRect && anchorRect.width > 0) {
-    const rawFocusX = (anchorRect.left + anchorRect.width / 2) - regionLeft;
-    const rawFocusY = (anchorRect.top + anchorRect.height / 2) - regionTop;
-
-    // Keep focus within comfortable bounds of the region
-    focusX = Math.max(regionW * 0.22, Math.min(regionW * 0.78, rawFocusX));
-    focusY = Math.max(regionH * 0.25, Math.min(regionH * 0.75, rawFocusY));
-  }
-
-  return {
-    rect: { left: regionLeft, top: regionTop, width: regionW, height: regionH },
-    focusX: Math.round(focusX),
-    focusY: Math.round(focusY),
-  };
-}
-
-/**
- * Triggers the signature ThemeFlow "Domain Expansion" anime impact celebration sequence.
+ * Triggers the SEAM Cinematic Anime Acceptance Animation.
  */
 export function fireAcceptedCelebration(options: CelebrationOptions = {}): void {
-  // Respect user preference for reduced motion
-  if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    return;
-  }
+  const isReducedMotion = typeof window !== 'undefined' &&
+    window.matchMedia &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // Cancel any running celebration to prevent overlapping instances
   stopAcceptedCelebration();
 
-  const {
-    anchorElement = null,
-    themeAccent = '#34d399',
-    verdictText = 'ACCEPTED',
-  } = options;
+  const { verdictText = 'ACCEPTED' } = options;
 
   const winW = typeof window !== 'undefined' ? window.innerWidth : 1920;
   const winH = typeof window !== 'undefined' ? window.innerHeight : 1080;
 
-  // Resolve target Test Result region and focal coordinates
-  const { rect, focusX, focusY } = resolveCelebrationRegion(anchorElement, winW, winH);
+  // Handle reduced motion preference: restrained brief title + seal fade
+  if (isReducedMotion) {
+    runReducedMotionCelebration(verdictText, winW, winH);
+    return;
+  }
 
-  // Create isolated, strictly bounded container anchored to Test Result region
+  // Create isolated, full-viewport transparent celebration overlay
   const container = document.createElement('div');
-  container.id = 'themeflow-anime-celebration';
+  container.id = 'themeflow-seam-celebration';
   container.setAttribute('aria-hidden', 'true');
   Object.assign(container.style, {
     position: 'fixed',
-    left: `${rect.left}px`,
-    top: `${rect.top}px`,
-    width: `${rect.width}px`,
-    height: `${rect.height}px`,
+    top: '0',
+    left: '0',
+    width: '100vw',
+    height: '100vh',
     pointerEvents: 'none',
     zIndex: '9999999',
     overflow: 'hidden',
-    borderRadius: '8px',
   });
 
-  // Inject scoped keyframes if not present
-  ensureDomainExpansionStyles();
+  // Inject scoped keyframes and styles
+  ensureSeamStyles();
 
-  // 1. Domain Dimensional Dimming Backdrop (dims ONLY this immediate celebration region)
-  const backdrop = createDomainBackdrop(themeAccent);
-  container.appendChild(backdrop);
+  // Frame 01: Tension Layer (Desaturation & 4-corner ink wash)
+  const tensionLayer = createTensionLayer();
+  container.appendChild(tensionLayer);
 
-  // 2. High-Visibility Multi-Layer Energy Slash & Directional Speed Lines SVG
-  const slashSvg = createDomainSlashSvg(rect.width, rect.height, focusX, focusY, themeAccent);
+  // Frame 02 & 04: Diagonal Energy Slash & Opening Seam (SVG)
+  const slashSvg = createEnergySlashSvg(winW, winH);
   container.appendChild(slashSvg);
 
-  // 3. Directional Angular Shard Physics Canvas
-  const canvas = document.createElement('canvas');
-  canvas.width = rect.width;
-  canvas.height = rect.height;
-  Object.assign(canvas.style, {
+  // Frame 03: High-Contrast B&W Manga Impact Frame (80ms flash)
+  const impactLayer = createMangaImpactFrame(winW, winH);
+  container.appendChild(impactLayer);
+
+  // Frame 04: Directional Sparks Particle Canvas
+  const sparksCanvas = document.createElement('canvas');
+  sparksCanvas.width = winW;
+  sparksCanvas.height = winH;
+  Object.assign(sparksCanvas.style, {
     position: 'absolute',
     top: '0',
     left: '0',
@@ -179,64 +102,47 @@ export function fireAcceptedCelebration(options: CelebrationOptions = {}): void 
     height: '100%',
     pointerEvents: 'none',
   });
-  container.appendChild(canvas);
+  container.appendChild(sparksCanvas);
 
-  // 4. Hero Victory Reveal (Clean, Bold, Commanding Typography + Vector Seal)
-  const victoryReveal = createDomainVictoryReveal(focusX, focusY, verdictText, themeAccent);
-  container.appendChild(victoryReveal);
+  // Frame 05 & 06: Ink-Brush Banner with ACCEPTED typography & Vermillion AC Seal
+  const victoryBanner = createInkBrushVictoryBanner(verdictText);
+  container.appendChild(victoryBanner);
 
   document.body.appendChild(container);
 
-  // Directional Shards Simulation
+  // Directional Kinetic Sparks Simulation
   let animId: number | null = null;
   let isCleanedUp = false;
-  const ctx = canvas.getContext('2d');
-  const particles = spawnDirectionalShards(focusX, focusY, themeAccent);
+  const ctx = sparksCanvas.getContext('2d');
+  const sparks = spawnSeamSparks(winW, winH);
   const startTime = performance.now();
 
   function render(now: number) {
     if (isCleanedUp) return;
     const elapsed = now - startTime;
-    if (!ctx) return;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (ctx) {
+      ctx.clearRect(0, 0, sparksCanvas.width, sparksCanvas.height);
 
-    if (elapsed > 180 && elapsed < 1600) {
-      const progress = Math.min(1, (elapsed - 180) / 1420);
+      // Sparks active from Frame 04 through Frame 06 (0.45s to 1.70s)
+      if (elapsed >= 420 && elapsed <= 1750) {
+        const progress = (elapsed - 420) / 1330;
 
-      for (const p of particles) {
-        // Record trail history for speed lines
-        p.prevX = p.x;
-        p.prevY = p.y;
+        for (const p of sparks) {
+          p.prevX = p.x;
+          p.prevY = p.y;
+          p.x += p.vx;
+          p.y += p.vy;
 
-        p.x += p.vx;
-        p.y += p.vy;
+          // Strong aerodynamic deceleration along the cut direction
+          p.vx *= 0.932;
+          p.vy *= 0.932;
+          p.alpha = Math.max(0, 1 - Math.pow(progress, 1.3));
 
-        // Kinetic aerodynamic drag: rapid initial burst then deceleration in place
-        p.vx *= 0.908;
-        p.vy *= 0.908;
-        p.rotation += p.rotSpeed;
-        p.alpha = Math.max(0, 1 - Math.pow(progress, 1.25));
+          if (p.alpha <= 0.01) continue;
 
-        if (p.alpha <= 0.01) continue;
-
-        ctx.save();
-        ctx.globalAlpha = p.alpha * p.baseAlpha;
-
-        if (p.shape === 'shard') {
-          // Sharp polygonal diamond shard
-          ctx.translate(p.x, p.y);
-          ctx.rotate(p.rotation);
-          ctx.fillStyle = p.color;
-          ctx.beginPath();
-          ctx.moveTo(-p.size * 0.7, 0);
-          ctx.lineTo(0, -p.size * 2.4);
-          ctx.lineTo(p.size * 0.7, 0);
-          ctx.lineTo(0, p.size * 2.4);
-          ctx.closePath();
-          ctx.fill();
-        } else {
-          // Dynamic kinetic energy spark with streak trail
+          ctx.save();
+          ctx.globalAlpha = p.alpha * p.baseAlpha;
           ctx.strokeStyle = p.color;
           ctx.lineWidth = p.size;
           ctx.lineCap = 'round';
@@ -246,20 +152,19 @@ export function fireAcceptedCelebration(options: CelebrationOptions = {}): void 
           if (typeof ctx.stroke === 'function') {
             ctx.stroke();
           }
+          ctx.restore();
         }
-
-        ctx.restore();
       }
     }
 
-    if (elapsed < 1980) {
+    if (elapsed < 2180) {
       animId = requestAnimationFrame(render);
     }
   }
 
   animId = requestAnimationFrame(render);
 
-  // Complete teardown handler
+  // Complete Teardown Handler (Frame 08: Back to Normal at 2.20s)
   const teardown = () => {
     if (isCleanedUp) return;
     isCleanedUp = true;
@@ -277,33 +182,121 @@ export function fireAcceptedCelebration(options: CelebrationOptions = {}): void 
 
   activeCelebrationTeardown = teardown;
 
-  // Auto-cleanup by 1980ms (completes in ~2.0s without residual shifts)
-  setTimeout(teardown, 1980);
+  // Exact lifecycle: 2.18s auto-cleanup
+  setTimeout(teardown, 2180);
 }
 
 /**
- * Creates the localized dimensional backdrop dimming ONLY the celebration region.
+ * Fallback for reduced-motion preference: crisp, restrained fade of typography and seal.
  */
-function createDomainBackdrop(accentColor: string): HTMLElement {
-  const backdrop = document.createElement('div');
-  backdrop.className = 'tf-domain-dim';
-  Object.assign(backdrop.style, {
+function runReducedMotionCelebration(text: string, winW: number, winH: number): void {
+  const container = document.createElement('div');
+  container.id = 'themeflow-seam-celebration';
+  Object.assign(container.style, {
+    position: 'fixed',
+    top: '35%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '16px',
+    padding: '12px 28px',
+    background: '#0C0D10',
+    border: '1.5px solid #E11D48',
+    borderRadius: '8px',
+    boxShadow: '0 8px 32px rgba(0,0,0,0.8)',
+    pointerEvents: 'none',
+    zIndex: '9999999',
+    opacity: '0',
+    transition: 'opacity 0.25s ease-out',
+  });
+
+  const label = document.createElement('span');
+  label.textContent = text;
+  Object.assign(label.style, {
+    fontSize: '22px',
+    fontWeight: '900',
+    letterSpacing: '0.22em',
+    color: '#F8FAFC',
+    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif",
+  });
+  container.appendChild(label);
+
+  const seal = document.createElement('div');
+  Object.assign(seal.style, {
+    width: '32px',
+    height: '32px',
+    borderRadius: '50%',
+    border: '2px solid #E11D48',
+    color: '#E11D48',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontWeight: '900',
+    fontSize: '13px',
+    letterSpacing: '0.05em',
+  });
+  seal.textContent = 'AC';
+  container.appendChild(seal);
+
+  document.body.appendChild(container);
+
+  requestAnimationFrame(() => {
+    container.style.opacity = '1';
+  });
+
+  setTimeout(() => {
+    container.style.opacity = '0';
+    setTimeout(() => {
+      if (container.parentNode) container.parentNode.removeChild(container);
+    }, 300);
+  }, 1200);
+}
+
+/**
+ * Frame 01 — TENSION Layer (0.00–0.30s)
+ * Gathers subtle dark ink vignettes in the 4 screen corners and presents a faint trembling hairline.
+ */
+function createTensionLayer(): HTMLElement {
+  const layer = document.createElement('div');
+  layer.className = 'seam-tension-layer';
+  Object.assign(layer.style, {
     position: 'absolute',
     inset: '0',
-    background: 'radial-gradient(ellipse at center, rgba(3, 20, 10, 0.85) 0%, rgba(1, 10, 5, 0.92) 65%, rgba(0, 0, 0, 0.97) 100%)',
-    border: `1.5px solid ${accentColor}`,
-    boxShadow: `inset 0 0 60px rgba(16, 185, 129, 0.32), 0 12px 36px rgba(0, 0, 0, 0.9)`,
-    borderRadius: '8px',
-    animation: 'tfDomainDim 1.95s cubic-bezier(0.16, 1, 0.3, 1) forwards',
     pointerEvents: 'none',
+    animation: 'seamTensionAnim 2.18s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+    background: `
+      radial-gradient(circle at 0% 0%, rgba(12, 13, 16, 0.72) 0%, transparent 45%),
+      radial-gradient(circle at 100% 0%, rgba(12, 13, 16, 0.72) 0%, transparent 45%),
+      radial-gradient(circle at 0% 100%, rgba(12, 13, 16, 0.72) 0%, transparent 45%),
+      radial-gradient(circle at 100% 100%, rgba(12, 13, 16, 0.72) 0%, transparent 45%)
+    `,
   });
-  return backdrop;
+
+  // Hairline tremor at upper left (0.00–0.30s)
+  const tremor = document.createElement('div');
+  Object.assign(tremor.style, {
+    position: 'absolute',
+    top: '12%',
+    left: '8%',
+    width: '80px',
+    height: '1.2px',
+    background: 'linear-gradient(90deg, transparent, #F8FAFC, transparent)',
+    opacity: '0.8',
+    transform: 'rotate(32deg)',
+    animation: 'seamTremorAnim 0.30s ease-in-out forwards',
+  });
+  layer.appendChild(tremor);
+
+  return layer;
 }
 
 /**
- * Creates the high-visibility multi-layer energy slash, speed lines, and expanding shockwaves.
+ * Frame 02 & Frame 04: The Cut and The Seam Opens (SVG)
+ * Bottom-left to top-right diagonal energy arc with white core, violet-cyan fringes,
+ * and opening incision gap.
  */
-function createDomainSlashSvg(w: number, h: number, cx: number, cy: number, accentColor: string): SVGSVGElement {
+function createEnergySlashSvg(w: number, h: number): SVGSVGElement {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
   Object.assign(svg.style, {
@@ -316,245 +309,320 @@ function createDomainSlashSvg(w: number, h: number, cx: number, cy: number, acce
     pointerEvents: 'none',
   });
 
-  // Diagonal slash coordinates spanning across the region from top-right to bottom-left
-  const slashX1 = Math.round(cx + w * 0.58);
-  const slashY1 = Math.round(cy - h * 0.52);
-  const slashX2 = Math.round(cx - w * 0.58);
-  const slashY2 = Math.round(cy + h * 0.52);
-  const slashLength = Math.round(Math.hypot(slashX2 - slashX1, slashY2 - slashY1));
+  // Diagonal slash coordinates from bottom-left to top-right
+  const x1 = -w * 0.08;
+  const y1 = h * 1.08;
+  const x2 = w * 1.08;
+  const y2 = -h * 0.08;
+  const slashLen = Math.hypot(x2 - x1, y2 - y1);
 
-  // Max shockwave radius to comfortably cover the region
-  const maxShockRadius = Math.round(Math.max(w, h) * 0.58);
+  // Defs: Violet-Cyan gradient & glow filters
+  const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+  defs.innerHTML = `
+    <linearGradient id="seamCutGradient" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#8B5CF6" stop-opacity="0.9" />
+      <stop offset="50%" stop-color="#F8FAFC" stop-opacity="1" />
+      <stop offset="100%" stop-color="#06B6D4" stop-opacity="0.9" />
+    </linearGradient>
+    <filter id="seamVioletCyanGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  `;
+  svg.appendChild(defs);
 
-  // 1. Observable Primary Expanding Emerald Shockwave Ring
-  const shockwave1 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-  shockwave1.setAttribute('cx', String(cx));
-  shockwave1.setAttribute('cy', String(cy));
-  shockwave1.setAttribute('r', String(maxShockRadius));
-  shockwave1.setAttribute('fill', 'none');
-  shockwave1.setAttribute('stroke', '#86efac');
-  shockwave1.setAttribute('stroke-width', '5.5');
-  shockwave1.style.transformOrigin = `${cx}px ${cy}px`;
-  shockwave1.style.animation = 'tfDomainShockPrimary 0.85s 0.10s cubic-bezier(0.12, 0.9, 0.2, 1) forwards';
-  svg.appendChild(shockwave1);
+  // Outer Cyan Dispersion Fringe
+  const cyanAura = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  cyanAura.setAttribute('x1', String(x1));
+  cyanAura.setAttribute('y1', String(y1));
+  cyanAura.setAttribute('x2', String(x2));
+  cyanAura.setAttribute('y2', String(y2));
+  cyanAura.setAttribute('stroke', '#06B6D4');
+  cyanAura.setAttribute('stroke-width', '18');
+  cyanAura.setAttribute('stroke-linecap', 'round');
+  cyanAura.setAttribute('opacity', '0.75');
+  cyanAura.style.strokeDasharray = `${slashLen} ${slashLen}`;
+  cyanAura.style.strokeDashoffset = String(slashLen);
+  cyanAura.style.animation = 'seamCutAura 1.70s 0.28s cubic-bezier(0.85, 0, 0.15, 1) forwards';
+  svg.appendChild(cyanAura);
 
-  // 2. Observable Compression Echo Shockwave Ring (secondary ripple)
-  const shockwave2 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-  shockwave2.setAttribute('cx', String(cx));
-  shockwave2.setAttribute('cy', String(cy));
-  shockwave2.setAttribute('r', String(Math.round(maxShockRadius * 0.78)));
-  shockwave2.setAttribute('fill', 'none');
-  shockwave2.setAttribute('stroke', '#38bdf8');
-  shockwave2.setAttribute('stroke-width', '3.0');
-  shockwave2.style.transformOrigin = `${cx}px ${cy}px`;
-  shockwave2.style.animation = 'tfDomainShockSecondary 0.75s 0.18s cubic-bezier(0.14, 0.86, 0.25, 1) forwards';
-  svg.appendChild(shockwave2);
+  // Middle Violet Energy Fringe
+  const violetBlade = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  violetBlade.setAttribute('x1', String(x1));
+  violetBlade.setAttribute('y1', String(y1));
+  violetBlade.setAttribute('x2', String(x2));
+  violetBlade.setAttribute('y2', String(y2));
+  violetBlade.setAttribute('stroke', '#8B5CF6');
+  violetBlade.setAttribute('stroke-width', '7.5');
+  violetBlade.setAttribute('stroke-linecap', 'round');
+  violetBlade.style.strokeDasharray = `${slashLen} ${slashLen}`;
+  violetBlade.style.strokeDashoffset = String(slashLen);
+  violetBlade.style.animation = 'seamCutViolet 1.70s 0.29s cubic-bezier(0.85, 0, 0.15, 1) forwards';
+  svg.appendChild(violetBlade);
 
-  // 3. Directional Manga Speed Lines (parallel to slash vector across celebration region)
-  const angle = Math.atan2(slashY2 - slashY1, slashX2 - slashX1);
-  const normalAngle = angle + Math.PI / 2;
-  const speedOffsets = [-90, -50, -20, 20, 50, 90];
+  // Core Brilliant White-Hot Incision
+  const whiteCore = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  whiteCore.setAttribute('x1', String(x1));
+  whiteCore.setAttribute('y1', String(y1));
+  whiteCore.setAttribute('x2', String(x2));
+  whiteCore.setAttribute('y2', String(y2));
+  whiteCore.setAttribute('stroke', '#F8FAFC');
+  whiteCore.setAttribute('stroke-width', '3.2');
+  whiteCore.setAttribute('stroke-linecap', 'round');
+  whiteCore.style.strokeDasharray = `${slashLen} ${slashLen}`;
+  whiteCore.style.strokeDashoffset = String(slashLen);
+  whiteCore.style.animation = 'seamCutCore 1.70s 0.30s cubic-bezier(0.85, 0, 0.15, 1) forwards';
+  svg.appendChild(whiteCore);
 
-  for (let i = 0; i < speedOffsets.length; i++) {
-    const offset = speedOffsets[i];
-    const lineLen = 140 + (i % 3) * 60;
-    const startShift = -lineLen / 2 + (i % 2 === 0 ? 30 : -30);
+  // Frame 04: The Seam Opens — Two parallel separating incision lips (0.48s–1.70s)
+  const seamLip1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  seamLip1.setAttribute('x1', String(x1 - 6));
+  seamLip1.setAttribute('y1', String(y1 - 10));
+  seamLip1.setAttribute('x2', String(x2 - 6));
+  seamLip1.setAttribute('y2', String(y2 - 10));
+  seamLip1.setAttribute('stroke', 'rgba(139, 92, 246, 0.7)');
+  seamLip1.setAttribute('stroke-width', '1.6');
+  seamLip1.style.animation = 'seamLipLeft 1.40s 0.48s cubic-bezier(0.16, 1, 0.3, 1) forwards';
+  svg.appendChild(seamLip1);
 
-    const ox = cx + Math.cos(normalAngle) * offset;
-    const oy = cy + Math.sin(normalAngle) * offset;
+  const seamLip2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  seamLip2.setAttribute('x1', String(x1 + 6));
+  seamLip2.setAttribute('y1', String(y1 + 10));
+  seamLip2.setAttribute('x2', String(x2 + 6));
+  seamLip2.setAttribute('y2', String(y2 + 10));
+  seamLip2.setAttribute('stroke', 'rgba(6, 182, 212, 0.7)');
+  seamLip2.setAttribute('stroke-width', '1.6');
+  seamLip2.style.animation = 'seamLipRight 1.40s 0.48s cubic-bezier(0.16, 1, 0.3, 1) forwards';
+  svg.appendChild(seamLip2);
 
-    const lx1 = ox + Math.cos(angle) * startShift;
-    const ly1 = oy + Math.sin(angle) * startShift;
-    const lx2 = ox + Math.cos(angle) * (startShift + lineLen);
-    const ly2 = oy + Math.sin(angle) * (startShift + lineLen);
-
-    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    line.setAttribute('x1', lx1.toFixed(1));
-    line.setAttribute('y1', ly1.toFixed(1));
-    line.setAttribute('x2', lx2.toFixed(1));
-    line.setAttribute('y2', ly2.toFixed(1));
-    line.setAttribute('stroke', i % 2 === 0 ? '#4ade80' : '#ffffff');
-    line.setAttribute('stroke-width', (2.2 + (i % 2) * 1.2).toFixed(1));
-    line.setAttribute('stroke-linecap', 'round');
-    line.style.animation = `tfMangaSpeedLine 0.32s ${(i * 0.02).toFixed(2)}s cubic-bezier(0.1, 0.9, 0.2, 1) forwards`;
-    svg.appendChild(line);
-  }
-
-  // 4. Multi-Layer Energy Slash
-  // Layer 4a: Outer Neon Emerald Flare (Broad luminous glow)
-  const slashHalo = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-  slashHalo.setAttribute('x1', String(slashX1));
-  slashHalo.setAttribute('y1', String(slashY1));
-  slashHalo.setAttribute('x2', String(slashX2));
-  slashHalo.setAttribute('y2', String(slashY2));
-  slashHalo.setAttribute('stroke', '#10b981');
-  slashHalo.setAttribute('stroke-width', '24');
-  slashHalo.setAttribute('stroke-linecap', 'round');
-  slashHalo.style.strokeDasharray = `${slashLength} ${slashLength}`;
-  slashHalo.style.strokeDashoffset = String(slashLength);
-  slashHalo.style.animation = 'tfSlashGlow 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards';
-  svg.appendChild(slashHalo);
-
-  // Layer 4b: Inner Vibrant Energy Beam
-  const slashCore = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-  slashCore.setAttribute('x1', String(slashX1));
-  slashCore.setAttribute('y1', String(slashY1));
-  slashCore.setAttribute('x2', String(slashX2));
-  slashCore.setAttribute('y2', String(slashY2));
-  slashCore.setAttribute('stroke', '#4ade80');
-  slashCore.setAttribute('stroke-width', '8');
-  slashCore.setAttribute('stroke-linecap', 'round');
-  slashCore.style.strokeDasharray = `${slashLength} ${slashLength}`;
-  slashCore.style.strokeDashoffset = String(slashLength);
-  slashCore.style.animation = 'tfSlashCore 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards';
-  svg.appendChild(slashCore);
-
-  // Layer 4c: Incandescent White Center Blade
-  const slashBlade = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-  slashBlade.setAttribute('x1', String(slashX1));
-  slashBlade.setAttribute('y1', String(slashY1));
-  slashBlade.setAttribute('x2', String(slashX2));
-  slashBlade.setAttribute('y2', String(slashY2));
-  slashBlade.setAttribute('stroke', '#ffffff');
-  slashBlade.setAttribute('stroke-width', '3.2');
-  slashBlade.setAttribute('stroke-linecap', 'round');
-  slashBlade.style.strokeDasharray = `${slashLength} ${slashLength}`;
-  slashBlade.style.strokeDashoffset = String(slashLength);
-  slashBlade.style.animation = 'tfSlashBlade 0.48s cubic-bezier(0.16, 1, 0.3, 1) forwards';
-  svg.appendChild(slashBlade);
-
-  // 5. Focal Impact Starburst / Diamond Flash
-  const starburst = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-  const sSize = 36;
-  const dPath = `
-    M ${cx} ${cy - sSize}
-    Q ${cx} ${cy} ${cx + sSize} ${cy}
-    Q ${cx} ${cy} ${cx} ${cy + sSize}
-    Q ${cx} ${cy} ${cx - sSize} ${cy}
-    Q ${cx} ${cy} ${cx} ${cy - sSize}
+  // Frame 05 / 06 Glint Flare Star at Upper Intersection
+  const flareCx = w * 0.58;
+  const flareCy = h * 0.33;
+  const starFlare = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  const fRadius = 38;
+  const starPath = `
+    M ${flareCx} ${flareCy - fRadius}
+    Q ${flareCx} ${flareCy} ${flareCx + fRadius} ${flareCy}
+    Q ${flareCx} ${flareCy} ${flareCx} ${flareCy + fRadius}
+    Q ${flareCx} ${flareCy} ${flareCx - fRadius} ${flareCy}
+    Q ${flareCx} ${flareCy} ${flareCx} ${flareCy - fRadius}
     Z
   `;
-  starburst.setAttribute('d', dPath);
-  starburst.setAttribute('fill', '#ffffff');
-  starburst.style.transformOrigin = `${cx}px ${cy}px`;
-  starburst.style.animation = 'tfImpactStarburst 0.35s 0.08s cubic-bezier(0.16, 1, 0.3, 1) forwards';
-  svg.appendChild(starburst);
+  starFlare.setAttribute('d', starPath);
+  starFlare.setAttribute('fill', '#FFFFFF');
+  starFlare.style.transformOrigin = `${flareCx}px ${flareCy}px`;
+  starFlare.style.animation = 'seamStarGlint 0.65s 0.88s cubic-bezier(0.16, 1, 0.3, 1) forwards';
+  svg.appendChild(starFlare);
 
   return svg;
 }
 
 /**
- * Creates the clean, commanding victory reveal (100% sharp typography, vector seal, no tiny HUD clutter).
+ * Frame 03 — IMPACT FRAME (0.40–0.48s)
+ * 80ms high-contrast monochrome manga flash with radial ink speed rays and 3px jolt.
  */
-function createDomainVictoryReveal(cx: number, cy: number, text: string, accentColor: string): HTMLElement {
-  const wrap = document.createElement('div');
-  wrap.className = 'tf-domain-victory';
-  Object.assign(wrap.style, {
+function createMangaImpactFrame(w: number, h: number): HTMLElement {
+  const frame = document.createElement('div');
+  frame.className = 'seam-impact-frame';
+  Object.assign(frame.style, {
     position: 'absolute',
-    left: `${cx}px`,
-    top: `${cy}px`,
+    inset: '0',
+    pointerEvents: 'none',
+    opacity: '0',
+    animation: 'seamImpactFlash 0.12s 0.40s steps(1, end) forwards',
+  });
+
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+  Object.assign(svg.style, {
+    width: '100%',
+    height: '100%',
+    shapeRendering: 'crispEdges',
+  });
+
+  const cx = w * 0.5;
+  const cy = h * 0.5;
+
+  // 16 aggressive manga ink speed rays radiating inward
+  const rayCount = 18;
+  for (let i = 0; i < rayCount; i++) {
+    const angle = (i * (Math.PI * 2 / rayCount)) + (Math.random() - 0.5) * 0.15;
+    const outerR = Math.max(w, h) * 0.85;
+    const innerR = 120 + (i % 3) * 60;
+
+    const x1 = cx + Math.cos(angle) * outerR;
+    const y1 = cy + Math.sin(angle) * outerR;
+    const x2 = cx + Math.cos(angle) * innerR;
+    const y2 = cy + Math.sin(angle) * innerR;
+
+    const wedge = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+    const perpAngle = angle + Math.PI / 2;
+    const wHalf = 6 + (i % 2) * 12;
+
+    const px1 = x1 + Math.cos(perpAngle) * wHalf;
+    const py1 = y1 + Math.sin(perpAngle) * wHalf;
+    const px2 = x1 - Math.cos(perpAngle) * wHalf;
+    const py2 = y1 - Math.sin(perpAngle) * wHalf;
+
+    wedge.setAttribute('points', `${px1},${py1} ${px2},${py2} ${x2},${y2}`);
+    wedge.setAttribute('fill', i % 2 === 0 ? '#0C0D10' : '#F8FAFC');
+    svg.appendChild(wedge);
+  }
+
+  frame.appendChild(svg);
+  return frame;
+}
+
+/**
+ * Frame 05 & 06: Ink-Brush Banner, Typography ACCEPTED & Vermillion AC Seal
+ * Organic horizontal sumi-e brush shape with real sharp typography and stamped vermillion seal.
+ * Frame 07: Separates along cut diagonal line and slides away.
+ */
+function createInkBrushVictoryBanner(text: string): HTMLElement {
+  const container = document.createElement('div');
+  container.className = 'seam-victory-container';
+  Object.assign(container.style, {
+    position: 'absolute',
+    top: '32%',
+    left: '50%',
     transform: 'translate(-50%, -50%)',
     display: 'flex',
-    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: '10px',
-    animation: 'tfVictoryRevealSequence 1.95s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+    pointerEvents: 'none',
     userSelect: 'none',
+    animation: 'seamBannerSequence 2.18s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+  });
+
+  // Tapered Sumi-e Black Ink Brush Ribbon (SVG for crisp organic brush stroke edges)
+  const brushWrap = document.createElement('div');
+  brushWrap.className = 'seam-brush-wrapper';
+  Object.assign(brushWrap.style, {
+    position: 'relative',
+    display: 'flex',
+    alignItems: 'center',
+    padding: '12px 36px 12px 42px',
+    filter: 'drop-shadow(0 14px 34px rgba(0, 0, 0, 0.9))',
+  });
+
+  // Organic brush stroke background SVG (tapered bristles, natural manga ink contour)
+  const brushSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  brushSvg.setAttribute('viewBox', '0 0 540 84');
+  Object.assign(brushSvg.style, {
+    position: 'absolute',
+    inset: '0',
+    width: '100%',
+    height: '100%',
+    overflow: 'visible',
     pointerEvents: 'none',
   });
 
-  // Vector Emerald Victory Seal with Cardinal Notches & Bold Checkmark
-  const seal = document.createElement('div');
-  seal.className = 'tf-victory-seal';
-  Object.assign(seal.style, {
-    width: '48px',
-    height: '48px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: '50%',
-    background: 'radial-gradient(circle, rgba(16, 185, 129, 0.28) 0%, rgba(4, 15, 8, 0.95) 75%)',
-    border: `2px solid #22c55e`,
-    boxShadow: '0 0 24px rgba(34, 197, 94, 0.75), 0 0 45px rgba(16, 185, 129, 0.35)',
-    position: 'relative',
-  });
-
-  seal.innerHTML = `
-    <svg width="48" height="48" viewBox="0 0 48 48" fill="none" style="display:block;">
-      <!-- Cardinal anime tick notches -->
-      <line x1="24" y1="2" x2="24" y2="7" stroke="#86efac" stroke-width="2.2" stroke-linecap="round" />
-      <line x1="24" y1="41" x2="24" y2="46" stroke="#86efac" stroke-width="2.2" stroke-linecap="round" />
-      <line x1="2" y1="24" x2="7" y2="24" stroke="#86efac" stroke-width="2.2" stroke-linecap="round" />
-      <line x1="41" y1="24" x2="46" y2="24" stroke="#86efac" stroke-width="2.2" stroke-linecap="round" />
-      <!-- Bold Vector Checkmark -->
-      <polyline points="14,24 22,32 35,17" stroke="#ffffff" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round" />
-    </svg>
+  brushSvg.innerHTML = `
+    <!-- Top-left bristle flare -->
+    <path d="M 18,36 C 8,40 2,42 0,44 C 8,46 16,45 28,43 Z" fill="#0C0D10" />
+    <path d="M 28,26 C 14,30 6,34 2,36 C 12,38 22,37 38,34 Z" fill="#0C0D10" />
+    <!-- Main organic brush body -->
+    <path d="
+      M 32,22
+      C 80,16 160,18 270,17
+      C 380,16 460,20 504,24
+      C 524,26 536,32 540,42
+      C 536,52 522,58 502,60
+      C 450,65 370,64 270,66
+      C 170,68 85,66 32,60
+      C 16,58 6,52 2,42
+      C 6,32 18,24 32,22
+      Z"
+      fill="#0C0D10"
+      stroke="#14161B"
+      stroke-width="1.5"
+    />
+    <!-- Bottom-right tapered bristles -->
+    <path d="M 504,46 C 516,48 532,50 538,51 C 528,54 514,54 498,53 Z" fill="#0C0D10" />
+    <path d="M 488,56 C 504,58 522,60 528,62 C 516,64 500,63 482,61 Z" fill="#0C0D10" />
   `;
-  wrap.appendChild(seal);
+  brushWrap.appendChild(brushSvg);
 
-  // Typography Container
-  const titleBox = document.createElement('div');
-  Object.assign(titleBox.style, {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
+  // Content Row: ACCEPTED Typography + Stamped Vermillion Seal
+  const contentRow = document.createElement('div');
+  Object.assign(contentRow.style, {
     position: 'relative',
-    overflow: 'hidden',
-    padding: '2px 14px',
+    zIndex: '2',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '24px',
   });
 
-  // Hero ACCEPTED Title
-  const title = document.createElement('div');
-  title.className = 'tf-victory-title';
-  title.textContent = text;
-  Object.assign(title.style, {
-    fontSize: '28px',
+  // Typography: ACCEPTED (Real HTML text, bold, sharp, paper white, forward slant)
+  const textEl = document.createElement('span');
+  textEl.className = 'seam-accepted-text';
+  textEl.textContent = text;
+  Object.assign(textEl.style, {
+    fontSize: '34px',
     fontWeight: '900',
-    letterSpacing: '0.22em',
-    color: '#ffffff',
+    letterSpacing: '0.24em',
+    color: '#F8FAFC',
     textTransform: 'uppercase',
-    textShadow: '0 0 22px rgba(74, 222, 128, 0.95), 0 0 48px rgba(16, 185, 129, 0.65)',
     fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, sans-serif",
-    lineHeight: '1.1',
+    transform: 'skewX(-6deg)',
+    textShadow: '0 0 16px rgba(248, 250, 252, 0.4), 0 0 32px rgba(6, 182, 212, 0.3)',
     WebkitFontSmoothing: 'antialiased',
     textRendering: 'geometricPrecision',
   });
-  titleBox.appendChild(title);
+  contentRow.appendChild(textEl);
 
-  // Clean Subtitle
-  const sub = document.createElement('div');
-  sub.className = 'tf-victory-sub';
-  sub.textContent = 'SUBMISSION VERIFIED';
-  Object.assign(sub.style, {
-    fontSize: '10.5px',
-    fontWeight: '800',
-    letterSpacing: '0.36em',
-    color: '#86efac',
-    textTransform: 'uppercase',
-    marginTop: '4px',
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, sans-serif",
+  // Stamped Vermillion Japanese-inspired Circular Seal with "AC"
+  const seal = document.createElement('div');
+  seal.className = 'seam-vermillion-seal';
+  Object.assign(seal.style, {
+    width: '46px',
+    height: '46px',
+    borderRadius: '50%',
+    border: '2.5px solid #E11D48',
+    background: 'radial-gradient(circle, rgba(225, 29, 72, 0.18) 0%, rgba(12, 13, 16, 0.95) 85%)',
+    boxShadow: '0 0 18px rgba(225, 29, 72, 0.75), inset 0 0 10px rgba(225, 29, 72, 0.3)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: '0',
+    animation: 'seamSealStamp 0.35s 0.92s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+    transform: 'scale(0) rotate(-25deg)',
+    opacity: '0',
   });
-  titleBox.appendChild(sub);
 
-  // Diagonal Light Sweep Glint
+  seal.innerHTML = `
+    <svg width="46" height="46" viewBox="0 0 46 46" fill="none">
+      <!-- Inner seal ring -->
+      <circle cx="23" cy="23" r="18.5" stroke="#E11D48" stroke-width="1.2" stroke-dasharray="4 2" />
+      <!-- Stylized crisp vector AC letters -->
+      <text x="23" y="28" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif" font-size="16" font-weight="900" fill="#E11D48" text-anchor="middle" letter-spacing="0.08em">AC</text>
+    </svg>
+  `;
+  contentRow.appendChild(seal);
+
+  brushWrap.appendChild(contentRow);
+
+  // Frame 06: Delicate White-Cyan Light Sweep Glint across lettering
   const glint = document.createElement('div');
   Object.assign(glint.style, {
     position: 'absolute',
     inset: '0',
-    background: 'linear-gradient(105deg, transparent 20%, rgba(255, 255, 255, 0.85) 50%, rgba(74, 222, 128, 0.75) 60%, transparent 80%)',
-    transform: 'translateX(-150%) skewX(-24deg)',
-    animation: 'tfTitleGlintSweep 0.68s 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+    background: 'linear-gradient(105deg, transparent 25%, rgba(248, 250, 252, 0.75) 50%, rgba(6, 182, 212, 0.6) 58%, transparent 75%)',
+    transform: 'translateX(-160%) skewX(-24deg)',
+    animation: 'seamLightSweep 0.55s 1.18s cubic-bezier(0.16, 1, 0.3, 1) forwards',
     pointerEvents: 'none',
+    zIndex: '3',
   });
-  titleBox.appendChild(glint);
+  brushWrap.appendChild(glint);
 
-  wrap.appendChild(titleBox);
-
-  return wrap;
+  container.appendChild(brushWrap);
+  return container;
 }
 
-interface DirectionalShard {
+interface SeamSpark {
   x: number;
   y: number;
   prevX: number;
@@ -563,221 +631,183 @@ interface DirectionalShard {
   vy: number;
   size: number;
   color: string;
-  shape: 'shard' | 'spark';
-  rotation: number;
-  rotSpeed: number;
   alpha: number;
   baseAlpha: number;
 }
 
-function spawnDirectionalShards(cx: number, cy: number, accentColor: string): DirectionalShard[] {
-  const particles: DirectionalShard[] = [];
-  const palette = ['#ffffff', '#86efac', '#4ade80', '#22c55e', '#38bdf8', accentColor];
-  const count = 18; // Deliberate, impactful burst
+/**
+ * Spawns 18–20 elongated directional sparks traveling strictly along the 32° diagonal cut vector.
+ */
+function spawnSeamSparks(w: number, h: number): SeamSpark[] {
+  const sparks: SeamSpark[] = [];
+  const palette = ['#F8FAFC', '#8B5CF6', '#06B6D4', '#FFFFFF'];
+  const count = 20;
+
+  // Cut vector angle ~ 32 degrees (bottom-left to upper-right)
+  const baseAngle = -Math.atan2(h, w);
 
   for (let i = 0; i < count; i++) {
-    // Angular distribution aligned with shockwave expansion
-    const angle = (i * (Math.PI * 2 / count)) + (Math.random() - 0.5) * 0.35;
-    const speed = 4.2 + Math.random() * 4.6;
+    // Distributed along the diagonal trajectory
+    const t = 0.2 + (i / count) * 0.6;
+    const startX = w * t + (Math.random() - 0.5) * 40;
+    const startY = h * (1 - t) + (Math.random() - 0.5) * 40;
 
-    const spawnX = cx + Math.cos(angle) * (6 + Math.random() * 12);
-    const spawnY = cy + Math.sin(angle) * (6 + Math.random() * 12);
+    // Angle tightly aligned with the cut vector +/- 0.12 radians
+    const angle = baseAngle + (Math.random() - 0.5) * 0.24;
+    const speed = 7.0 + Math.random() * 6.5;
 
-    particles.push({
-      x: spawnX,
-      y: spawnY,
-      prevX: spawnX,
-      prevY: spawnY,
+    sparks.push({
+      x: startX,
+      y: startY,
+      prevX: startX,
+      prevY: startY,
       vx: Math.cos(angle) * speed,
       vy: Math.sin(angle) * speed,
-      size: 2.2 + Math.random() * 2.8,
+      size: 1.8 + Math.random() * 1.6,
       color: palette[Math.floor(Math.random() * palette.length)],
-      shape: Math.random() > 0.45 ? 'shard' : 'spark',
-      rotation: Math.random() * Math.PI * 2,
-      rotSpeed: (Math.random() - 0.5) * 0.12,
       alpha: 1,
       baseAlpha: 0.85 + Math.random() * 0.15,
     });
   }
 
-  return particles;
+  return sparks;
 }
 
-function ensureDomainExpansionStyles(): void {
-  if (document.getElementById('themeflow-domain-keyframes')) return;
+/**
+ * Injects precision CSS keyframes matching the 8 storyboard frames.
+ */
+function ensureSeamStyles(): void {
+  if (document.getElementById('themeflow-seam-keyframes')) return;
 
   const style = document.createElement('style');
-  style.id = 'themeflow-domain-keyframes';
+  style.id = 'themeflow-seam-keyframes';
   style.textContent = `
-    /* Localized Domain Dimming Sequence */
-    @keyframes tfDomainDim {
-      0% {
-        opacity: 0;
-        transform: scale(0.97);
-      }
-      8% {
-        opacity: 1;
-        transform: scale(1.0);
-      }
-      80% {
-        opacity: 1;
-        transform: scale(1.0);
-      }
-      100% {
-        opacity: 0;
-        transform: scale(0.98);
-      }
+    /* Frame 01: Tension Vignette & Hairline Tremor */
+    @keyframes seamTensionAnim {
+      0% { opacity: 0; }
+      14% { opacity: 1; }
+      78% { opacity: 1; }
+      100% { opacity: 0; }
     }
 
-    /* Primary Observable Expanding Shockwave Ring */
-    @keyframes tfDomainShockPrimary {
-      0% {
-        transform: scale(0.04);
-        opacity: 1;
-        stroke-width: 7px;
-      }
-      50% {
-        opacity: 0.85;
-      }
-      100% {
-        transform: scale(1.0);
-        opacity: 0;
-        stroke-width: 0.8px;
-      }
+    @keyframes seamTremorAnim {
+      0% { transform: rotate(32deg) translate(0, 0); opacity: 0.2; }
+      30% { transform: rotate(32deg) translate(0.8px, -0.6px); opacity: 0.9; }
+      60% { transform: rotate(32deg) translate(-0.6px, 0.8px); opacity: 0.7; }
+      100% { transform: rotate(32deg) translate(0, 0); opacity: 0; }
     }
 
-    /* Secondary Compression Shockwave Ripple */
-    @keyframes tfDomainShockSecondary {
-      0% {
-        transform: scale(0.05);
-        opacity: 0.9;
-        stroke-width: 4.5px;
-      }
-      100% {
-        transform: scale(1.0);
-        opacity: 0;
-        stroke-width: 0.5px;
-      }
+    /* Frame 02: The Cut — Rapid diagonal blade stroke */
+    @keyframes seamCutCore {
+      0% { stroke-dashoffset: 2600; opacity: 0; }
+      8% { opacity: 1; }
+      22% { stroke-dashoffset: 0; opacity: 1; }
+      75% { opacity: 1; }
+      100% { opacity: 0; }
     }
 
-    /* Directional Manga Speed Lines */
-    @keyframes tfMangaSpeedLine {
-      0% {
-        stroke-dasharray: 0 200;
-        opacity: 0;
-      }
-      35% {
-        opacity: 1;
-      }
-      100% {
-        stroke-dasharray: 200 0;
-        opacity: 0;
-      }
+    @keyframes seamCutViolet {
+      0% { stroke-dashoffset: 2600; opacity: 0; }
+      8% { opacity: 0.95; }
+      24% { stroke-dashoffset: 0; opacity: 0.95; }
+      75% { opacity: 0.85; }
+      100% { opacity: 0; }
     }
 
-    /* High-Visibility Multi-Layer Energy Slash */
-    @keyframes tfSlashGlow {
-      0% {
-        stroke-dashoffset: 800;
-        opacity: 0;
-      }
-      20% {
-        opacity: 0.95;
-      }
-      50% {
-        stroke-dashoffset: 0;
-        opacity: 0.85;
-      }
-      100% {
-        stroke-dashoffset: 0;
-        opacity: 0;
-      }
+    @keyframes seamCutAura {
+      0% { stroke-dashoffset: 2600; opacity: 0; }
+      8% { opacity: 0.8; }
+      26% { stroke-dashoffset: 0; opacity: 0.8; }
+      70% { opacity: 0.6; }
+      100% { opacity: 0; }
     }
 
-    @keyframes tfSlashCore {
-      0% {
-        stroke-dashoffset: 800;
-        opacity: 0;
-      }
-      22% {
-        opacity: 1;
-      }
-      45% {
-        stroke-dashoffset: 0;
-        opacity: 0.95;
-      }
-      100% {
-        stroke-dashoffset: 0;
-        opacity: 0;
-      }
+    /* Frame 03: Impact Frame — 80ms flash with 3px jolt */
+    @keyframes seamImpactFlash {
+      0% { opacity: 0; transform: translate(0, 0); }
+      10% { opacity: 1; transform: translate(2px, -3px); }
+      50% { opacity: 1; transform: translate(-1px, 2px); }
+      90% { opacity: 0.8; transform: translate(0, 0); }
+      100% { opacity: 0; transform: translate(0, 0); }
     }
 
-    @keyframes tfSlashBlade {
-      0% {
-        stroke-dashoffset: 800;
-        opacity: 0;
-      }
-      24% {
-        opacity: 1;
-      }
-      40% {
-        stroke-dashoffset: 0;
-        opacity: 1;
-      }
-      100% {
-        stroke-dashoffset: 0;
-        opacity: 0;
-      }
+    /* Frame 04: The Seam Opens — Separating incision lips */
+    @keyframes seamLipLeft {
+      0% { transform: translate(0, 0); opacity: 0; }
+      20% { opacity: 0.9; }
+      60% { transform: translate(-10px, -6px); opacity: 0.85; }
+      100% { transform: translate(0, 0); opacity: 0; }
     }
 
-    /* Impact Focal Starburst */
-    @keyframes tfImpactStarburst {
-      0% {
-        transform: scale(0);
-        opacity: 0;
-      }
-      30% {
-        transform: scale(1.7);
-        opacity: 1;
-      }
-      100% {
-        transform: scale(0.2);
-        opacity: 0;
-      }
+    @keyframes seamLipRight {
+      0% { transform: translate(0, 0); opacity: 0; }
+      20% { opacity: 0.9; }
+      60% { transform: translate(10px, 6px); opacity: 0.85; }
+      100% { transform: translate(0, 0); opacity: 0; }
     }
 
-    /* Victory Reveal Sequence (Zero Blur, Bold Authority) */
-    @keyframes tfVictoryRevealSequence {
+    /* Flare Star Glint */
+    @keyframes seamStarGlint {
+      0% { transform: scale(0) rotate(0deg); opacity: 0; }
+      30% { transform: scale(1.6) rotate(45deg); opacity: 1; }
+      100% { transform: scale(0.2) rotate(90deg); opacity: 0; }
+    }
+
+    /* Frame 05 & 06 & 07: Banner Lifecycle & Split Resolution */
+    @keyframes seamBannerSequence {
       0% {
-        transform: translate(-50%, -50%) scale(0.72);
         opacity: 0;
+        transform: translate(-50%, -50%) scale(0.75);
       }
-      14% {
-        transform: translate(-50%, -50%) scale(1.06);
+      /* Frame 05: The Reveal (0.90–1.10s) */
+      42% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.75);
+      }
+      48% {
         opacity: 1;
+        transform: translate(-50%, -50%) scale(1.05);
       }
-      22% {
+      53% {
+        opacity: 1;
         transform: translate(-50%, -50%) scale(1.0);
-        opacity: 1;
       }
-      80% {
-        transform: translate(-50%, -50%) scale(1.0);
+      /* Frame 06: Victory Hold (1.10–1.70s) */
+      78% {
         opacity: 1;
+        transform: translate(-50%, -50%) scale(1.0);
+      }
+      /* Frame 07: Resolution (1.70–2.00s) — Cleaves along cut line */
+      88% {
+        opacity: 0.85;
+        transform: translate(-46%, -53%) scale(0.98);
       }
       100% {
-        transform: translate(-50%, -50%) scale(0.96);
         opacity: 0;
+        transform: translate(-42%, -56%) scale(0.92);
       }
     }
 
-    /* Diagonal Light Glint Sweep Across Victory Typography */
-    @keyframes tfTitleGlintSweep {
+    /* Seal Stamp Animation */
+    @keyframes seamSealStamp {
       0% {
-        transform: translateX(-150%) skewX(-24deg);
+        opacity: 0;
+        transform: scale(1.8) rotate(-45deg);
+      }
+      60% {
+        opacity: 1;
+        transform: scale(0.92) rotate(4deg);
       }
       100% {
-        transform: translateX(250%) skewX(-24deg);
+        opacity: 1;
+        transform: scale(1.0) rotate(0deg);
       }
+    }
+
+    /* Light Sweep across brush lettering */
+    @keyframes seamLightSweep {
+      0% { transform: translateX(-160%) skewX(-24deg); }
+      100% { transform: translateX(240%) skewX(-24deg); }
     }
   `;
   document.head.appendChild(style);

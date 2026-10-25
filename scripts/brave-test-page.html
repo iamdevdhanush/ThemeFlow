@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>LeetCode Two Sum Simulation</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #1a1a1a;
+      color: #eff2f6;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    nav {
+      height: 48px;
+      background: #282828;
+      border-bottom: 1px solid #333;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      font-weight: 600;
+      gap: 16px;
+    }
+    .layout-main {
+      flex: 1;
+      display: flex;
+    }
+    .editor-pane {
+      flex: 1;
+      background: #1e1e1e;
+      border-right: 1px solid #333;
+      padding: 16px;
+      font-family: monospace;
+    }
+    .result-pane {
+      width: 580px;
+      background: #262626;
+      display: flex;
+      flex-direction: column;
+    }
+    .tabs-header {
+      height: 38px;
+      background: #303030;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 12px;
+      border-bottom: 1px solid #3a3a3a;
+    }
+    .tab {
+      padding: 4px 10px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .tab.active {
+      font-weight: 600;
+      border-bottom: 2px solid #2cbb5d;
+      color: #fff;
+    }
+    .tab-content {
+      flex: 1;
+      padding: 24px;
+      position: relative;
+    }
+    .verdict-line {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .verdict-text {
+      font-size: 20px;
+      font-weight: 700;
+      color: #2cbb5d;
+    }
+    .metrics {
+      display: flex;
+      gap: 24px;
+      margin-top: 16px;
+      color: #8c8c8c;
+      font-size: 14px;
+    }
+    .metric-val {
+      color: #fff;
+      font-weight: 600;
+    }
+    .bottom-bar {
+      height: 48px;
+      background: #2a2a2a;
+      border-top: 1px solid #333;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 0 16px;
+      gap: 12px;
+    }
+    button.submit-btn {
+      background: #2cbb5d;
+      color: #fff;
+      border: none;
+      padding: 6px 18px;
+      border-radius: 4px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body class="themeflow-active themeflow-leetcode">
+  <nav>
+    <span>LeetCode</span>
+    <span>Problems</span>
+    <span style="color: #8c8c8c;">1. Two Sum</span>
+  </nav>
+  <div class="layout-main">
+    <div class="editor-pane">
+      <div style="color: #6a9955;">// Solution code</div>
+      <div>class Solution {</div>
+      <div style="padding-left: 20px;">public int[] twoSum(int[] nums, int target) {</div>
+      <div style="padding-left: 40px;">Map&lt;Integer, Integer&gt; map = new HashMap&lt;&gt;();</div>
+      <div style="padding-left: 40px;">// ...</div>
+      <div style="padding-left: 40px;">return new int[]{};</div>
+      <div style="padding-left: 20px;">}</div>
+      <div>}</div>
+    </div>
+    <div class="result-pane flexlayout__tab">
+      <div class="tabs-header">
+        <div class="tab">Testcase</div>
+        <div class="tab active">Test Result</div>
+      </div>
+      <div class="tab-content" id="test-result-content">
+        <div class="verdict-line">
+          <span class="text-green-s verdict-text" data-e2e-locator="submission-result" id="verdict-accepted">Accepted</span>
+        </div>
+        <div class="metrics">
+          <div>Runtime: <span class="metric-val">1 ms</span> (Beats 99.2%)</div>
+          <div>Memory: <span class="metric-val">44.2 MB</span> (Beats 85.4%)</div>
+        </div>
+      </div>
+      <div class="bottom-bar">
+        <button class="submit-btn" data-e2e-locator="console-submit-button" id="btn-submit">Submit</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

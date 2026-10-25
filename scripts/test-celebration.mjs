@@ -1,22 +1,10 @@
 /**
- * Comprehensive Test Suite for ThemeFlow Anime Impact Celebration & Platform Trigger Lifecycle
- * Validates:
- * 1. Celebration lifecycle (Impact, Victory, Release, Cleanup)
- * 2. Reduced motion suppression
- * 3. Celebration auto-cleanup by 2000ms
- * 4. Deduplication / prior instance teardown
- * 5. LeetCode: New Accepted submission triggers celebration exactly once
- * 6. LeetCode: Repeated DOM mutations & React re-renders do NOT duplicate celebration
- * 7. LeetCode: Pre-existing historical Accepted verdicts on page load NEVER trigger celebration
- * 8. LeetCode: Clicking "Submissions" tab or historical list items NEVER triggers celebration
- * 9. LeetCode: Failed verdicts (Wrong Answer, Runtime Error, TLE) NEVER trigger celebration
- * 10. LeetCode: SPA navigation / URL change cleanly stops celebration & resets state
- * 11. LeetCode: Component teardown / destroy() stops celebration & disconnects observers
+ * Comprehensive Test Suite for ThemeFlow SEAM Anime Acceptance Animation & Lifecycle
  */
 
 import assert from 'node:assert';
 
-console.log('--- Running ThemeFlow Celebration & Triggering Verification Tests ---');
+console.log('--- Running ThemeFlow SEAM Acceptance & Lifecycle Verification Tests ---');
 
 // Mock Browser Environment
 class MockClassList {
@@ -31,13 +19,22 @@ class MockElement {
     this.tagName = tagName.toUpperCase();
     this.id = '';
     this.className = '';
-    this.textContent = '';
+    this._textContent = '';
     this.style = {};
     this.children = [];
     this.parentNode = null;
     this.attributes = new Map();
     this.classList = new MockClassList();
     this.listeners = new Map();
+  }
+
+  get textContent() {
+    if (this._textContent) return this._textContent;
+    return this.children.map(c => c.textContent).join(' ');
+  }
+
+  set textContent(v) {
+    this._textContent = String(v);
   }
 
   setAttribute(k, v) { this.attributes.set(k, String(v)); }
@@ -130,8 +127,8 @@ global.document = {
   createElement(tag) { return new MockElement(tag); },
   createElementNS(ns, tag) { return new MockElement(tag); },
   getElementById(id) {
-    if (id === 'themeflow-anime-celebration') {
-      return mockDocBody.children.find(c => c.id === 'themeflow-anime-celebration') || null;
+    if (id === 'themeflow-seam-celebration' || id === 'themeflow-anime-celebration') {
+      return mockDocBody.children.find(c => c.id === 'themeflow-seam-celebration' || c.id === 'themeflow-anime-celebration') || null;
     }
     return null;
   },
@@ -235,42 +232,51 @@ const mockSettings = {
   },
 };
 
-// 1. Celebration DOM creation and properties
-await test('Celebration creates container with pointer-events: none and high zIndex', () => {
+function getCelebrationContainer() {
+  return mockDocBody.children.find(c => c.id === 'themeflow-seam-celebration' || c.id === 'themeflow-anime-celebration');
+}
+
+// 1. SEAM Celebration DOM creation and non-blocking properties
+await test('SEAM Celebration creates container with pointer-events: none and high zIndex', () => {
   global.__PREFERS_REDUCED_MOTION__ = false;
   mockDocBody.children = [];
 
-  fireAcceptedCelebration({ verdictText: 'ACCEPTED', themeAccent: '#34d399' });
+  fireAcceptedCelebration({ verdictText: 'ACCEPTED' });
 
-  const container = mockDocBody.children.find(c => c.id === 'themeflow-anime-celebration');
+  const container = getCelebrationContainer();
   assert.ok(container, 'Container should be appended to body');
   assert.strictEqual(container.style.pointerEvents, 'none', 'Pointer events must be none');
   assert.strictEqual(container.style.zIndex, '9999999', 'Z-index must be maximum');
 
   // Verify elements inside container
-  assert.ok(container.children.length >= 2, 'Container should have SVG impact and Victory badge');
+  assert.ok(container.children.length >= 3, 'Container should contain tension, slash SVG, and victory banner');
   stopAcceptedCelebration();
   assert.strictEqual(mockDocBody.children.length, 0, 'Container should be cleanly removed on stop');
 });
 
 // 2. Reduced motion preference
-await test('Reduced motion strictly suppresses animation', () => {
+await test('Reduced motion preference shows restrained brief ACCEPTED and AC seal fade', () => {
   global.__PREFERS_REDUCED_MOTION__ = true;
   mockDocBody.children = [];
 
   fireAcceptedCelebration({ verdictText: 'ACCEPTED' });
-  assert.strictEqual(mockDocBody.children.length, 0, 'No elements should be added when prefers-reduced-motion is true');
+  const container = getCelebrationContainer();
+  assert.ok(container, 'Restrained container created');
+  assert.ok(container.textContent.includes('AC'), 'Includes AC seal mark');
+  assert.ok(container.textContent.includes('ACCEPTED'), 'Includes ACCEPTED text');
+
+  stopAcceptedCelebration();
   global.__PREFERS_REDUCED_MOTION__ = false;
 });
 
-// 3. Cleanup by 2000ms
-await test('Celebration auto-cleans up temporary elements by 2000ms', async () => {
+// 3. Auto-cleanup by ~2200ms
+await test('SEAM Celebration auto-cleans up all temporary elements by 2200ms', async () => {
   mockDocBody.children = [];
   fireAcceptedCelebration({ verdictText: 'ACCEPTED' });
   assert.strictEqual(mockDocBody.children.length, 1);
 
-  await new Promise(r => setTimeout(r, 2050));
-  assert.strictEqual(mockDocBody.children.length, 0, 'DOM container should auto-remove within 2000ms');
+  await new Promise(r => setTimeout(r, 2250));
+  assert.strictEqual(mockDocBody.children.length, 0, 'DOM container should auto-remove within 2200ms');
 });
 
 // 4. Repeated rapid triggers clean up previous instances cleanly
@@ -287,7 +293,7 @@ await test('Successive celebrations teardown prior instance before creating new 
 });
 
 // 5. LeetCode new Accepted submission triggering
-await test('LeetCode: Genuine Submit button click followed by Accepted verdict triggers celebration', () => {
+await test('LeetCode: Genuine Submit button click followed by Accepted verdict triggers SEAM celebration', () => {
   mockDocBody.children = [];
   const adapter = new LeetCodeAdapter();
   adapter.init(mockSettings);
@@ -313,7 +319,7 @@ await test('LeetCode: Genuine Submit button click followed by Accepted verdict t
   // Trigger mutation
   observer.callback([{ type: 'childList', target: mockDocBody }]);
 
-  const celebration = mockDocBody.children.find(c => c.id === 'themeflow-anime-celebration');
+  const celebration = getCelebrationContainer();
   assert.ok(celebration, 'Celebration should trigger for confirmed Accepted submission');
 
   adapter.destroy();
@@ -343,7 +349,7 @@ await test('LeetCode: Repeated mutations & React re-renders do NOT re-fire celeb
 
   // First mutation: fires celebration
   observer.callback([{ type: 'childList', target: mockDocBody }]);
-  assert.strictEqual(mockDocBody.children.filter(c => c.id === 'themeflow-anime-celebration').length, 1);
+  assert.strictEqual(mockDocBody.children.length, 1);
 
   // Clear celebration to test if another fires
   stopAcceptedCelebration();
@@ -378,7 +384,7 @@ await test('LeetCode: Historical Accepted elements already on page load never fi
   // Mutate DOM without submitting
   observer.callback([{ type: 'childList', target: mockDocBody }]);
 
-  const celebration = mockDocBody.children.find(c => c.id === 'themeflow-anime-celebration');
+  const celebration = getCelebrationContainer();
   assert.strictEqual(celebration, undefined, 'Historical Accepted verdict must never trigger celebration');
   adapter.destroy();
 });
@@ -408,7 +414,7 @@ await test('LeetCode: Clicking Submissions tab ignores past submissions and does
   querySelectorAllHandler = () => [pastAccepted];
   observer.callback([{ type: 'childList', target: mockDocBody }]);
 
-  const celebration = mockDocBody.children.find(c => c.id === 'themeflow-anime-celebration');
+  const celebration = getCelebrationContainer();
   assert.strictEqual(celebration, undefined, 'Clicking Submissions tab must never fire celebration');
   adapter.destroy();
 });
@@ -437,7 +443,7 @@ await test('LeetCode: Wrong Answer / Runtime Error never triggers celebration', 
 
   observer.callback([{ type: 'childList', target: mockDocBody }]);
 
-  const celebration = mockDocBody.children.find(c => c.id === 'themeflow-anime-celebration');
+  const celebration = getCelebrationContainer();
   assert.strictEqual(celebration, undefined, 'Failed verdicts must never trigger celebration');
 
   // If subsequent Accepted element appears afterwards, pending was terminated so still no celebration
@@ -447,7 +453,7 @@ await test('LeetCode: Wrong Answer / Runtime Error never triggers celebration', 
   querySelectorAllHandler = () => [rogueAccepted];
 
   observer.callback([{ type: 'childList', target: mockDocBody }]);
-  assert.strictEqual(mockDocBody.children.find(c => c.id === 'themeflow-anime-celebration'), undefined);
+  assert.strictEqual(getCelebrationContainer(), undefined);
 
   adapter.destroy();
 });
@@ -465,66 +471,48 @@ await test('LeetCode: SPA navigation or adapter.destroy() cleans up active celeb
   assert.strictEqual(mockDocBody.children.length, 0, 'destroy() must cleanly stop active celebration');
 });
 
-// 11. Bounded container dimensions and non-interfering isolation
-await test('Celebration uses strictly bounded region container with overflow hidden (NO full-viewport overlay)', () => {
+// 11. Storyboard Layers: Tension, Energy Slash, Manga Impact Frame, and Victory Banner
+await test('SEAM includes full 8-frame storyboard layers: tension, slash SVG, manga impact, and ink-brush banner with AC seal', () => {
   mockDocBody.children = [];
   fireAcceptedCelebration({ verdictText: 'ACCEPTED' });
 
-  const container = mockDocBody.children.find(c => c.id === 'themeflow-anime-celebration');
+  const container = getCelebrationContainer();
   assert.ok(container, 'Celebration container exists');
-  const w = parseFloat(container.style.width);
-  const h = parseFloat(container.style.height);
-  assert.ok(w > 0 && w < 1920, `Container width (${w}) must be strictly bounded and not full-viewport (1920)`);
-  assert.ok(h > 0 && h < 1080, `Container height (${h}) must be strictly bounded and not full-viewport (1080)`);
-  assert.strictEqual(container.style.overflow, 'hidden', 'Container must have overflow: hidden to clip effects');
-  assert.strictEqual(container.style.position, 'fixed', 'Container must have position: fixed');
 
-  // Verify backdrop, SVG, canvas, and victory reveal exist inside container
-  const backdrop = container.children.find(c => c.className === 'tf-domain-dim');
-  assert.ok(backdrop, 'Domain dimming backdrop must exist');
+  // Frame 01: Tension layer
+  const tension = container.children.find(c => c.className === 'seam-tension-layer');
+  assert.ok(tension, 'Frame 01: Tension layer must exist');
 
+  // Frame 02 & 04: Diagonal Energy Slash SVG
   const svg = container.children.find(c => c.tagName === 'SVG');
-  assert.ok(svg, 'Energy slash SVG layer must exist');
+  assert.ok(svg, 'Frame 02: Energy slash SVG must exist');
 
+  // Frame 03: Manga Impact Frame
+  const impact = container.children.find(c => c.className === 'seam-impact-frame');
+  assert.ok(impact, 'Frame 03: Manga impact frame must exist');
+
+  // Frame 04: Directional Sparks Canvas
   const canvas = container.children.find(c => c.tagName === 'CANVAS');
-  assert.ok(canvas, 'Canvas shard layer must exist');
-  assert.strictEqual(canvas.width, w, 'Canvas must match bounded container width');
-  assert.strictEqual(canvas.height, h, 'Canvas must match bounded container height');
+  assert.ok(canvas, 'Frame 04: Sparks canvas must exist');
 
-  const victory = container.children.find(c => c.className === 'tf-domain-victory');
-  assert.ok(victory, 'Victory reveal centerpiece must exist');
+  // Frame 05 & 06: Ink-brush Victory Banner with ACCEPTED and AC seal
+  const banner = container.children.find(c => c.className === 'seam-victory-container');
+  assert.ok(banner, 'Frame 05: Ink-brush victory banner must exist');
 
   stopAcceptedCelebration();
 });
 
-// 12. Anchoring and viewport edge clamping
-await test('Celebration clamps positioning safely within viewport when anchor is near screen edges', () => {
+// 12. Non-blocking transparent overlay
+await test('SEAM container preserves non-blocking pointer events and clean viewport isolation', () => {
   mockDocBody.children = [];
+  fireAcceptedCelebration({ verdictText: 'ACCEPTED' });
 
-  // Mock anchor near top-left edge (left: 5px, top: 5px)
-  const edgeAnchor = new MockElement('div');
-  edgeAnchor.getBoundingClientRect = () => ({
-    left: 5,
-    top: 5,
-    width: 20,
-    height: 20,
-    right: 25,
-    bottom: 25,
-  });
-
-  fireAcceptedCelebration({ anchorElement: edgeAnchor, verdictText: 'ACCEPTED' });
-
-  const container = mockDocBody.children.find(c => c.id === 'themeflow-anime-celebration');
+  const container = getCelebrationContainer();
   assert.ok(container);
-  
-  // Left and top should be clamped with >= 12px margin
-  const leftVal = parseFloat(container.style.left);
-  const topVal = parseFloat(container.style.top);
-  assert.ok(leftVal >= 12, `Left position (${leftVal}) must be clamped >= 12px to avoid bleeding off-screen`);
-  assert.ok(topVal >= 12, `Top position (${topVal}) must be clamped >= 12px to avoid bleeding off-screen`);
+  assert.strictEqual(container.style.pointerEvents, 'none', 'Pointer events must never block user interactions');
+  assert.strictEqual(container.style.position, 'fixed', 'Overlay must be fixed');
 
   stopAcceptedCelebration();
 });
 
 console.log(`\nAll ${testCount} Comprehensive Acceptance & Lifecycle Tests Passed Successfully!`);
-
