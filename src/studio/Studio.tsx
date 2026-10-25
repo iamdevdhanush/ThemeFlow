@@ -188,9 +188,14 @@ export const Studio: React.FC = () => {
   };
 
   const handleSimulateAc = (e?: React.MouseEvent<HTMLElement>) => {
+    // Anchor realistically near the problem verdict / preview workbench
+    const badge = (document.querySelector('.lc-status-solved') || document.querySelector('.cf-rating-badge')) as HTMLElement | null;
+    const previewArea = document.querySelector('.preview-workbench') as HTMLElement | null;
+    const anchor = badge || previewArea || e?.currentTarget || null;
+
     if (config.confettiEnabled) {
       fireAcceptedCelebration({
-        anchorElement: e?.currentTarget || null,
+        anchorElement: anchor,
         themeAccent: config.accentColor,
         verdictText: 'ACCEPTED',
       });
