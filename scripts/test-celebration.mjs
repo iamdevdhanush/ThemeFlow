@@ -464,4 +464,55 @@ await test('LeetCode: SPA navigation or adapter.destroy() cleans up active celeb
   assert.strictEqual(mockDocBody.children.length, 0, 'destroy() must cleanly stop active celebration');
 });
 
+// 11. Bounded container dimensions and non-interfering isolation
+await test('Celebration uses strictly bounded 420x180 container with overflow hidden (NO full-viewport overlay)', () => {
+  mockDocBody.children = [];
+  fireAcceptedCelebration({ verdictText: 'ACCEPTED' });
+
+  const container = mockDocBody.children.find(c => c.id === 'themeflow-anime-celebration');
+  assert.ok(container, 'Celebration container exists');
+  assert.strictEqual(container.style.width, '420px', 'Container width must be exactly 420px');
+  assert.strictEqual(container.style.height, '180px', 'Container height must be exactly 180px');
+  assert.strictEqual(container.style.overflow, 'hidden', 'Container must have overflow: hidden to clip effects');
+  assert.strictEqual(container.style.position, 'fixed', 'Container must have position: fixed');
+
+  // Verify canvas inside container is also sized to 420x180
+  const canvas = container.children.find(c => c.tagName === 'CANVAS');
+  assert.ok(canvas, 'Canvas shard layer exists');
+  assert.strictEqual(canvas.width, 420, 'Canvas must be bounded to 420px');
+  assert.strictEqual(canvas.height, 180, 'Canvas must be bounded to 180px');
+
+  stopAcceptedCelebration();
+});
+
+// 12. Anchoring and viewport edge clamping
+await test('Celebration clamps positioning safely within viewport when anchor is near screen edges', () => {
+  mockDocBody.children = [];
+
+  // Mock anchor near top-left edge (left: 5px, top: 5px)
+  const edgeAnchor = new MockElement('div');
+  edgeAnchor.getBoundingClientRect = () => ({
+    left: 5,
+    top: 5,
+    width: 20,
+    height: 20,
+    right: 25,
+    bottom: 25,
+  });
+
+  fireAcceptedCelebration({ anchorElement: edgeAnchor, verdictText: 'ACCEPTED' });
+
+  const container = mockDocBody.children.find(c => c.id === 'themeflow-anime-celebration');
+  assert.ok(container);
+  
+  // Center should be clamped: boxW is 420, half is 210, + 12px margin = 222px minimum left
+  const leftVal = parseFloat(container.style.left);
+  const topVal = parseFloat(container.style.top);
+  assert.ok(leftVal >= 222, `Left position (${leftVal}) must be clamped >= 222px to avoid clipping off-screen`);
+  assert.ok(topVal >= 102, `Top position (${topVal}) must be clamped >= 102px to avoid clipping off-screen`);
+
+  stopAcceptedCelebration();
+});
+
 console.log(`\nAll ${testCount} Comprehensive Acceptance & Lifecycle Tests Passed Successfully!`);
+
