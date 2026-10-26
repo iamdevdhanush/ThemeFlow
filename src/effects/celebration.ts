@@ -305,7 +305,7 @@ function createMangaImpactFrame(w: number, h: number): HTMLElement {
   // Outer high-contrast black ink speed rays
   const raysSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   raysSvg.setAttribute('viewBox', `0 0 ${w} ${h}`);
-  raysSvg.className = 'tf-seam-speed-rays';
+  raysSvg.setAttribute('class', 'tf-seam-speed-rays');
   Object.assign(raysSvg.style, {
     position: 'absolute',
     inset: '0',
