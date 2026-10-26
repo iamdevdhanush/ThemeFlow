@@ -1,8 +1,8 @@
 import {
   getSettings,
-  getCustomImageFromDB,
-  saveCustomImageToDB,
-  deleteCustomImageFromDB,
+  getCustomImageFromIndexedDB,
+  saveCustomImageToIndexedDB,
+  deleteCustomImageFromIndexedDB,
 } from '../storage/storage';
 
 chrome.runtime.onInstalled.addListener(async (details: chrome.runtime.InstalledDetails) => {
@@ -26,7 +26,7 @@ chrome.runtime.onMessage.addListener(
     }
 
     if (message.action === 'get_custom_image' && message.id) {
-      getCustomImageFromDB(message.id)
+      getCustomImageFromIndexedDB(message.id)
         .then((dataUrl) => {
           sendResponse({ status: dataUrl ? 'ok' : 'not_found', dataUrl });
         })
@@ -37,7 +37,7 @@ chrome.runtime.onMessage.addListener(
     }
 
     if (message.action === 'save_custom_image' && message.id && message.dataUrl) {
-      saveCustomImageToDB(message.id, message.dataUrl)
+      saveCustomImageToIndexedDB(message.id, message.dataUrl)
         .then(() => {
           sendResponse({ status: 'ok' });
         })
@@ -48,7 +48,7 @@ chrome.runtime.onMessage.addListener(
     }
 
     if (message.action === 'delete_custom_image' && message.id) {
-      deleteCustomImageFromDB(message.id)
+      deleteCustomImageFromIndexedDB(message.id)
         .then(() => {
           sendResponse({ status: 'ok' });
         })

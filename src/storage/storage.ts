@@ -49,7 +49,7 @@ function openDatabase(): Promise<IDBDatabase> {
   });
 }
 
-async function saveCustomImageToIndexedDB(id: string, dataUrl: string): Promise<void> {
+export async function saveCustomImageToIndexedDB(id: string, dataUrl: string): Promise<void> {
   customImageMemoryCache.set(id, dataUrl);
   try {
     const db = await openDatabase();
@@ -65,7 +65,7 @@ async function saveCustomImageToIndexedDB(id: string, dataUrl: string): Promise<
   }
 }
 
-async function getCustomImageFromIndexedDB(id: string): Promise<string | null> {
+export async function getCustomImageFromIndexedDB(id: string): Promise<string | null> {
   if (customImageMemoryCache.has(id)) {
     return customImageMemoryCache.get(id)!;
   }
@@ -87,7 +87,7 @@ async function getCustomImageFromIndexedDB(id: string): Promise<string | null> {
   }
 }
 
-async function deleteCustomImageFromIndexedDB(id: string): Promise<void> {
+export async function deleteCustomImageFromIndexedDB(id: string): Promise<void> {
   customImageMemoryCache.delete(id);
   try {
     const db = await openDatabase();
@@ -102,6 +102,8 @@ async function deleteCustomImageFromIndexedDB(id: string): Promise<void> {
     // ignore
   }
 }
+
+let isFetchingViaMessage = false;
 
 export async function saveCustomImageToDB(id: string, dataUrl: string): Promise<void> {
   if (!id || !dataUrl) return;
@@ -138,13 +140,14 @@ export async function getCustomImageFromDB(id: string): Promise<string | null> {
     return customImageMemoryCache.get(id)!;
   }
 
-  if (isExtensionOrigin()) {
+  if (isExtensionOrigin() || isFetchingViaMessage) {
     return getCustomImageFromIndexedDB(id);
   }
 
   // In content script on external host page (leetcode.com / codeforces.com), fetch from extension background worker
   if (typeof chrome !== 'undefined' && chrome.runtime?.sendMessage) {
     try {
+      isFetchingViaMessage = true;
       const response = await new Promise<any>((resolve) => {
         chrome.runtime.sendMessage(
           { action: 'get_custom_image', id },
@@ -157,11 +160,13 @@ export async function getCustomImageFromDB(id: string): Promise<string | null> {
           }
         );
       });
+      isFetchingViaMessage = false;
       if (response && response.status === 'ok' && response.dataUrl) {
         customImageMemoryCache.set(id, response.dataUrl);
         return response.dataUrl;
       }
     } catch (err) {
+      isFetchingViaMessage = false;
       console.warn('[ThemeFlow Storage] Failed to fetch custom image from background worker:', err);
     }
   }

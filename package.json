@@ -9,7 +9,7 @@
     "generate:icons": "node scripts/generate-icons.mjs",
     "generate:sounds": "node scripts/generate-sounds.mjs",
     "typecheck": "tsc --noEmit",
-    "test": "npx tsx scripts/test-celebration.mjs && npx tsx scripts/test-phase1-phase2.mjs && npx tsx scripts/test-phase3-controllers.mjs",
+    "test": "npx tsx scripts/test-celebration.mjs && npx tsx scripts/test-phase1-phase2.mjs && npx tsx scripts/test-phase3-controllers.mjs && npx tsx scripts/test-custom-wallpaper.mjs",
     "build": "node scripts/inspect-images.mjs && node scripts/generate-icons.mjs && node scripts/generate-sounds.mjs && node scripts/build.mjs && node scripts/verify-assets.mjs",
     "package": "npm run build && node scripts/package.mjs"
   },

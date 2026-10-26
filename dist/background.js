@@ -629,7 +629,59 @@ async function b(e) {
 	}
 }
 // src/storage/storage.ts
-function x() {
+var x = "ThemeFlowDB", S = 1, C = "custom_images", w = /* @__PURE__ */ new Map();
+function T() {
+	return new Promise((e, t) => {
+		if (typeof indexedDB > "u") return t(/* @__PURE__ */ Error("IndexedDB not supported"));
+		let n = indexedDB.open(x, S);
+		n.onupgradeneeded = () => {
+			let e = n.result;
+			e.objectStoreNames.contains(C) || e.createObjectStore(C, { keyPath: "id" });
+		}, n.onsuccess = () => e(n.result), n.onerror = () => t(n.error);
+	});
+}
+async function E(e, t) {
+	w.set(e, t);
+	try {
+		let n = await T();
+		return new Promise((r, i) => {
+			let a = n.transaction(C, "readwrite");
+			a.objectStore(C).put({
+				id: e,
+				dataUrl: t,
+				updatedAt: Date.now()
+			}), a.oncomplete = () => r(), a.onerror = () => i(a.error);
+		});
+	} catch (e) {
+		console.warn("[ThemeFlow Storage] IndexedDB put error:", e);
+	}
+}
+async function D(e) {
+	if (w.has(e)) return w.get(e);
+	try {
+		let t = await T();
+		return new Promise((n) => {
+			let r = t.transaction(C, "readonly").objectStore(C).get(e);
+			r.onsuccess = () => {
+				let t = r.result ? r.result.dataUrl : null;
+				t && w.set(e, t), n(t);
+			}, r.onerror = () => n(null);
+		});
+	} catch {
+		return null;
+	}
+}
+async function O(e) {
+	w.delete(e);
+	try {
+		let t = await T();
+		return new Promise((n) => {
+			let r = t.transaction(C, "readwrite");
+			r.objectStore(C).delete(e), r.oncomplete = () => n(), r.onerror = () => n();
+		});
+	} catch {}
+}
+function k() {
 	return typeof chrome < "u" && chrome.storage && chrome.storage.local ? {
 		get(e) {
 			return new Promise((t) => {
@@ -661,17 +713,17 @@ function x() {
 		}
 	} : null;
 }
-async function S() {
+async function A() {
 	try {
-		let e = x();
-		if (e) return C(await b(e));
+		let e = k();
+		if (e) return j(await b(e));
 	} catch (e) {
 		console.error("[ThemeFlow Storage] Failed to get settings, falling back to defaults:", e);
 	}
 	return a;
 }
 Promise.resolve();
-function C(e) {
+function j(e) {
 	let t = {
 		enabled: e.enabled,
 		activeThemeId: e.activeThemeId,
@@ -682,5 +734,29 @@ function C(e) {
 	return t.themeOverrides = e.themeOverrides, t;
 }
 chrome.runtime.onInstalled.addListener(async (e) => {
-	(e.reason === "install" || e.reason === "update") && await S();
-}), chrome.runtime.onMessage.addListener((e, t, n) => (e.action === "open_studio" && (chrome.tabs.create({ url: chrome.runtime.getURL("studio.html") }), n({ status: "ok" })), !0));
+	(e.reason === "install" || e.reason === "update") && await A();
+}), chrome.runtime.onMessage.addListener((e, t, n) => e.action === "open_studio" ? (chrome.tabs.create({ url: chrome.runtime.getURL("studio.html") }), n({ status: "ok" }), !0) : e.action === "get_custom_image" && e.id ? (D(e.id).then((e) => {
+	n({
+		status: e ? "ok" : "not_found",
+		dataUrl: e
+	});
+}).catch((e) => {
+	n({
+		status: "error",
+		error: e?.message
+	});
+}), !0) : e.action === "save_custom_image" && e.id && e.dataUrl ? (E(e.id, e.dataUrl).then(() => {
+	n({ status: "ok" });
+}).catch((e) => {
+	n({
+		status: "error",
+		error: e?.message
+	});
+}), !0) : (e.action === "delete_custom_image" && e.id && O(e.id).then(() => {
+	n({ status: "ok" });
+}).catch((e) => {
+	n({
+		status: "error",
+		error: e?.message
+	});
+}), !0));

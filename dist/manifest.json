@@ -26,7 +26,8 @@
   },
   "permissions": [
     "storage",
-    "tabs"
+    "tabs",
+    "unlimitedStorage"
   ],
   "host_permissions": [
     "*://leetcode.com/*",
