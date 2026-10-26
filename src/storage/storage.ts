@@ -1,7 +1,23 @@
 import { UserSettings, ThemeConfig } from '../types/theme';
-import { DEFAULT_USER_SETTINGS, THEME_PRESETS, presetToConfig } from '../themes/presets';
+import { StoredUserSettingsV2, SETTINGS_SCHEMA_VERSION, UserThemeOverrides } from '../types/themeSchema';
+import { DEFAULT_USER_SETTINGS } from '../themes/presets';
+import { themeRegistry } from '../themes/themeRegistry';
+import {
+  STORAGE_KEY_V2,
+  LEGACY_STORAGE_KEY_V1,
+  runSafeStorageMigration,
+  migrateV1ToV2,
+  StorageAdapter,
+  createDefaultSettingsV2,
+} from './migration';
+import { sanitizeStoredUserSettingsV2 } from './validation';
 
-const STORAGE_KEY = 'themeflow_user_settings_v1';
+export {
+  STORAGE_KEY_V2,
+  LEGACY_STORAGE_KEY_V1,
+  BACKUP_STORAGE_KEY_V1,
+} from './migration';
+
 const DB_NAME = 'ThemeFlowDB';
 const DB_VERSION = 1;
 const IMAGE_STORE = 'custom_images';
@@ -71,42 +87,190 @@ export async function deleteCustomImageFromDB(id: string): Promise<void> {
   }
 }
 
+function getActiveStorageAdapter(): StorageAdapter | null {
+  if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+    return {
+      get(keys: string[]): Promise<Record<string, any>> {
+        return new Promise((resolve) => {
+          chrome.storage.local.get(keys, (result) => {
+            resolve(result || {});
+          });
+        });
+      },
+      set(items: Record<string, any>): Promise<void> {
+        return new Promise((resolve, reject) => {
+          chrome.storage.local.set(items, () => {
+            if (chrome.runtime?.lastError) {
+              reject(chrome.runtime.lastError);
+            } else {
+              resolve();
+            }
+          });
+        });
+      },
+    };
+  }
+
+  if (typeof localStorage !== 'undefined') {
+    return {
+      async get(keys: string[]): Promise<Record<string, any>> {
+        const out: Record<string, any> = {};
+        for (const k of keys) {
+          const raw = localStorage.getItem(k);
+          if (raw) {
+            try {
+              out[k] = JSON.parse(raw);
+            } catch {
+              // ignore invalid json
+            }
+          }
+        }
+        return out;
+      },
+      async set(items: Record<string, any>): Promise<void> {
+        for (const [k, v] of Object.entries(items)) {
+          localStorage.setItem(k, JSON.stringify(v));
+        }
+      },
+    };
+  }
+
+  return null;
+}
+
 export async function getSettings(): Promise<UserSettings> {
   try {
-    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-      const result = await chrome.storage.local.get(STORAGE_KEY);
-      if (result && result[STORAGE_KEY]) {
-        return mergeWithDefaults(result[STORAGE_KEY]);
-      }
-    } else if (typeof localStorage !== 'undefined') {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        return mergeWithDefaults(JSON.parse(raw));
-      }
+    const adapter = getActiveStorageAdapter();
+    if (adapter) {
+      const v2 = await runSafeStorageMigration(adapter);
+      return v2ToUserSettings(v2);
     }
   } catch (err) {
-    console.error('Failed to get settings:', err);
+    console.error('[ThemeFlow Storage] Failed to get settings, falling back to defaults:', err);
   }
   return DEFAULT_USER_SETTINGS;
 }
 
-export async function saveSettings(settings: UserSettings): Promise<void> {
-  try {
-    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-      await chrome.storage.local.set({ [STORAGE_KEY]: settings });
-    } else if (typeof localStorage !== 'undefined') {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+let saveQueue: Promise<void> = Promise.resolve();
+
+export function saveSettings(settings: UserSettings): Promise<void> {
+  saveQueue = saveQueue.then(async () => {
+    try {
+      const adapter = getActiveStorageAdapter();
+      if (!adapter) return;
+
+      // 1. Retrieve existing v2 to preserve existing themeOverrides across other themes
+      const existingData = await adapter.get([STORAGE_KEY_V2]);
+      const existingV2 = existingData[STORAGE_KEY_V2];
+      const existingOverrides = (existingV2 && typeof existingV2 === 'object' && existingV2.themeOverrides)
+        ? { ...existingV2.themeOverrides }
+        : {};
+
+      const incomingOverrides = (settings as any).themeOverrides || {};
+      const mergedOverrides = { ...existingOverrides, ...incomingOverrides };
+
+      // 2. Track overrides for active theme if user customized properties on a built-in theme
+      const activeDef = themeRegistry.get(settings.activeThemeId);
+      if (activeDef && settings.currentConfig && !settings.currentConfig.isCustom) {
+        const activeOverrides: UserThemeOverrides = {};
+        let hasOverrides = false;
+
+        if (settings.currentConfig.mode && settings.currentConfig.mode !== activeDef.tokens.defaultMode) {
+          activeOverrides.mode = settings.currentConfig.mode;
+          hasOverrides = true;
+        }
+        if (settings.currentConfig.accentColor && settings.currentConfig.accentColor !== activeDef.tokens.accentColor) {
+          activeOverrides.accentColor = settings.currentConfig.accentColor;
+          hasOverrides = true;
+        }
+        if (typeof settings.currentConfig.overlayOpacity === 'number' && settings.currentConfig.overlayOpacity !== activeDef.tokens.surfaces.overlayOpacity) {
+          activeOverrides.overlayOpacity = settings.currentConfig.overlayOpacity;
+          hasOverrides = true;
+        }
+        if (typeof settings.currentConfig.blur === 'number' && settings.currentConfig.blur !== activeDef.tokens.surfaces.blur) {
+          activeOverrides.blur = settings.currentConfig.blur;
+          hasOverrides = true;
+        }
+        if (typeof settings.currentConfig.brightness === 'number' && settings.currentConfig.brightness !== activeDef.tokens.surfaces.brightness) {
+          activeOverrides.brightness = settings.currentConfig.brightness;
+          hasOverrides = true;
+        }
+        if (typeof settings.currentConfig.contrast === 'number' && settings.currentConfig.contrast !== activeDef.tokens.surfaces.contrast) {
+          activeOverrides.contrast = settings.currentConfig.contrast;
+          hasOverrides = true;
+        }
+        if (typeof settings.currentConfig.cardGlassOpacity === 'number' && settings.currentConfig.cardGlassOpacity !== activeDef.tokens.surfaces.cardGlassOpacity) {
+          activeOverrides.cardGlassOpacity = settings.currentConfig.cardGlassOpacity;
+          hasOverrides = true;
+        }
+        if (settings.currentConfig.fontFamily && settings.currentConfig.fontFamily !== activeDef.tokens.typography.fontFamily) {
+          activeOverrides.fontFamily = settings.currentConfig.fontFamily;
+          hasOverrides = true;
+        }
+        if (settings.currentConfig.effect && settings.currentConfig.effect !== 'none') {
+          activeOverrides.ambientEffect = settings.currentConfig.effect;
+          hasOverrides = true;
+        }
+
+        if (hasOverrides) {
+          mergedOverrides[settings.activeThemeId] = activeOverrides;
+        } else {
+          delete mergedOverrides[settings.activeThemeId];
+        }
+      }
+
+      // 3. Keep customThemes list in sync if active custom theme was updated
+      const customThemes = (settings.customThemes || []).map((ct) => {
+        if (ct.id === settings.activeThemeId && settings.currentConfig?.isCustom) {
+          return { ...ct, ...settings.currentConfig };
+        }
+        return ct;
+      });
+
+      const v2Candidate: StoredUserSettingsV2 = {
+        schemaVersion: SETTINGS_SCHEMA_VERSION,
+        enabled: settings.enabled,
+        activeThemeId: settings.activeThemeId,
+        quickSwitchVisible: settings.quickSwitchVisible,
+        audioSettings: {
+          enabled: settings.currentConfig.soundEnabled,
+          volume: settings.currentConfig.soundVolume,
+        },
+        animationSettings: {
+          celebrationEnabled: settings.currentConfig.confettiEnabled,
+          ambientEffect: settings.currentConfig.effect,
+        },
+        themeOverrides: mergedOverrides,
+        customThemes,
+        currentConfig: settings.currentConfig,
+      };
+
+      const sanitized = sanitizeStoredUserSettingsV2(v2Candidate, createDefaultSettingsV2());
+
+      // Save v2 and synchronize legacy v1 key so backward-compatible consumers read identical state
+      await adapter.set({
+        [STORAGE_KEY_V2]: sanitized,
+        [LEGACY_STORAGE_KEY_V1]: settings,
+      });
+    } catch (err) {
+      console.error('[ThemeFlow Storage] Failed to save settings:', err);
     }
-  } catch (err) {
-    console.error('Failed to save settings:', err);
-  }
+  });
+
+  return saveQueue;
 }
 
 export function subscribeToSettingsChanges(callback: (settings: UserSettings) => void): () => void {
   if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.onChanged) {
     const listener = (changes: { [key: string]: chrome.storage.StorageChange }, areaName: string) => {
-      if (areaName === 'local' && changes[STORAGE_KEY]) {
-        callback(mergeWithDefaults(changes[STORAGE_KEY].newValue));
+      if (areaName === 'local') {
+        if (changes[STORAGE_KEY_V2]?.newValue) {
+          const v2 = sanitizeStoredUserSettingsV2(changes[STORAGE_KEY_V2].newValue, createDefaultSettingsV2());
+          callback(v2ToUserSettings(v2));
+        } else if (changes[LEGACY_STORAGE_KEY_V1]?.newValue && !changes[STORAGE_KEY_V2]) {
+          const v2 = migrateV1ToV2(changes[LEGACY_STORAGE_KEY_V1].newValue);
+          callback(v2ToUserSettings(v2));
+        }
       }
     };
     chrome.storage.onChanged.addListener(listener);
@@ -115,9 +279,22 @@ export function subscribeToSettingsChanges(callback: (settings: UserSettings) =>
 
   // Fallback storage event for web pages
   const windowListener = (e: StorageEvent) => {
-    if (e.key === STORAGE_KEY && e.newValue) {
+    if (e.key === STORAGE_KEY_V2 && e.newValue) {
       try {
-        callback(mergeWithDefaults(JSON.parse(e.newValue)));
+        const parsed = JSON.parse(e.newValue);
+        const v2 = sanitizeStoredUserSettingsV2(parsed, createDefaultSettingsV2());
+        callback(v2ToUserSettings(v2));
+      } catch (err) {
+        console.error(err);
+      }
+    } else if (e.key === LEGACY_STORAGE_KEY_V1 && e.newValue) {
+      // If v2 key is already present in localStorage, ignore legacy event to avoid duplicate updates
+      if (typeof localStorage !== 'undefined' && localStorage.getItem(STORAGE_KEY_V2)) {
+        return;
+      }
+      try {
+        const v2 = migrateV1ToV2(JSON.parse(e.newValue));
+        callback(v2ToUserSettings(v2));
       } catch (err) {
         console.error(err);
       }
@@ -127,17 +304,14 @@ export function subscribeToSettingsChanges(callback: (settings: UserSettings) =>
   return () => window.removeEventListener('storage', windowListener);
 }
 
-function mergeWithDefaults(saved: any): UserSettings {
-  if (!saved || typeof saved !== 'object') {
-    return DEFAULT_USER_SETTINGS;
-  }
-  return {
-    ...DEFAULT_USER_SETTINGS,
-    ...saved,
-    currentConfig: {
-      ...DEFAULT_USER_SETTINGS.currentConfig,
-      ...(saved.currentConfig || {}),
-    },
-    customThemes: Array.isArray(saved.customThemes) ? saved.customThemes : [],
+function v2ToUserSettings(v2: StoredUserSettingsV2): UserSettings {
+  const settings: UserSettings = {
+    enabled: v2.enabled,
+    activeThemeId: v2.activeThemeId,
+    customThemes: v2.customThemes,
+    currentConfig: v2.currentConfig,
+    quickSwitchVisible: v2.quickSwitchVisible,
   };
+  (settings as any).themeOverrides = v2.themeOverrides;
+  return settings;
 }

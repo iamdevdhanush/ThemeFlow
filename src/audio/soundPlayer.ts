@@ -1,6 +1,19 @@
 // Sound player for ThemeFlow verdicts
 
 let audioContext: AudioContext | null = null;
+let suspendTimer: any = null;
+
+function scheduleAudioSuspend(): void {
+  if (typeof window === 'undefined') return;
+  if (suspendTimer) {
+    clearTimeout(suspendTimer);
+  }
+  suspendTimer = setTimeout(() => {
+    if (audioContext && audioContext.state === 'running') {
+      audioContext.suspend().catch(() => {});
+    }
+  }, 10000);
+}
 
 function getAudioContext(): AudioContext {
   if (!audioContext || audioContext.state === 'closed') {
@@ -8,9 +21,23 @@ function getAudioContext(): AudioContext {
     audioContext = new AudioCtx();
   }
   if (audioContext.state === 'suspended') {
-    audioContext.resume();
+    audioContext.resume().catch(() => {});
   }
+  scheduleAudioSuspend();
   return audioContext;
+}
+
+export function cleanupAudio(): void {
+  if (suspendTimer) {
+    clearTimeout(suspendTimer);
+    suspendTimer = null;
+  }
+  if (audioContext) {
+    if (audioContext.state !== 'closed') {
+      audioContext.close().catch(() => {});
+    }
+    audioContext = null;
+  }
 }
 
 /**

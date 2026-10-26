@@ -51,14 +51,25 @@ async function initMultiPlatform() {
     codeforcesAdapter.init(settings);
   }
 
-  // Subscribe to settings changes
-  subscribeToSettingsChanges(async (newSettings) => {
-    await themeEngine.apply(newSettings, platformClass);
-    if (leetcodeAdapter) {
-      leetcodeAdapter.update(newSettings);
-    } else if (codeforcesAdapter) {
-      codeforcesAdapter.update(newSettings);
-    }
+  // Subscribe to settings changes (batched via requestAnimationFrame to avoid thrashing on slider drags)
+  let pendingSettingsUpdate: UserSettings | null = null;
+  let updateRafId: number | null = null;
+
+  subscribeToSettingsChanges((newSettings) => {
+    pendingSettingsUpdate = newSettings;
+    if (updateRafId !== null) return;
+    updateRafId = requestAnimationFrame(async () => {
+      updateRafId = null;
+      if (!pendingSettingsUpdate) return;
+      const s = pendingSettingsUpdate;
+      pendingSettingsUpdate = null;
+      await themeEngine.apply(s, platformClass);
+      if (leetcodeAdapter) {
+        leetcodeAdapter.update(s);
+      } else if (codeforcesAdapter) {
+        codeforcesAdapter.update(s);
+      }
+    });
   });
 }
 

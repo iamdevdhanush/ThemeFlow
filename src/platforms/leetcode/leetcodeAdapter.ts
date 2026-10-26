@@ -1,6 +1,6 @@
 import { UserSettings, ThemeConfig } from '../../types/theme';
-import { fireAcceptedCelebration, stopAcceptedCelebration } from '../../effects/celebration';
-import { playAcceptedSound, playRejectedSound } from '../../audio/soundPlayer';
+import { verdictTriggerController } from '../../effects/verdictTriggerController';
+import { QuickPillController } from '../common/QuickPillController';
 
 export class LeetCodeAdapter {
   private observer: MutationObserver | null = null;
@@ -10,7 +10,7 @@ export class LeetCodeAdapter {
   private submissionPending = false;
   private submissionPendingTime = 0;
   private currentSubmissionSessionId: string | null = null;
-  private quickPill: HTMLElement | null = null;
+  private quickPill = new QuickPillController({ platformName: 'LeetCode' });
   private weAddedDarkClass = false;
   private boundClickHandler: ((e: MouseEvent) => void) | null = null;
   private boundKeyHandler: ((e: KeyboardEvent) => void) | null = null;
@@ -33,7 +33,7 @@ export class LeetCodeAdapter {
     this.initHtmlObserver(settings);
     this.initVerdictWatcher(settings);
     if (settings.quickSwitchVisible && settings.enabled) {
-      this.renderQuickPill(settings.currentConfig);
+      this.quickPill.render(settings.currentConfig);
     }
   }
 
@@ -42,9 +42,9 @@ export class LeetCodeAdapter {
     this.ensureThemeClasses(settings);
     this.syncNativeThemeState(settings);
     if (!settings.enabled || !settings.quickSwitchVisible) {
-      this.removeQuickPill();
+      this.quickPill.remove();
     } else {
-      this.renderQuickPill(settings.currentConfig);
+      this.quickPill.render(settings.currentConfig);
     }
   }
 
@@ -152,7 +152,7 @@ export class LeetCodeAdapter {
   private handleUrlChange(): void {
     if (typeof window !== 'undefined' && window.location.href !== this.lastUrl) {
       this.lastUrl = window.location.href;
-      stopAcceptedCelebration();
+      verdictTriggerController.stop();
       this.cancelPendingSubmission();
       this.recordExistingVerdictsBaseline();
 
@@ -165,7 +165,7 @@ export class LeetCodeAdapter {
           });
         }
         if (this.currentSettings.quickSwitchVisible) {
-          this.renderQuickPill(this.currentSettings.currentConfig);
+          this.quickPill.render(this.currentSettings.currentConfig);
         }
       }
     }
@@ -233,6 +233,24 @@ export class LeetCodeAdapter {
     }
   }
 
+  /**
+   * Checks whether a mutation target belongs to Monaco editor typing / cursor movements.
+   * Used to filter out keystroke noise and avoid layout thrashing.
+   */
+  private isEditorMutationTarget(node: Node | null): boolean {
+    if (!node) return false;
+    const el = node.nodeType === 1 ? (node as Element) : node.parentElement;
+    if (!el) return false;
+    if (typeof el.closest === 'function') {
+      return Boolean(
+        el.closest(
+          '.monaco-editor, .view-line, .view-lines, .monaco-mouse-cursor-text, .overflow-guard, #themeflow-anime-celebration, #themeflow-overlay-layer, #themeflow-bg-layer'
+        )
+      );
+    }
+    return false;
+  }
+
   private initVerdictWatcher(settings: UserSettings): void {
     if (this.observer) return;
 
@@ -245,8 +263,15 @@ export class LeetCodeAdapter {
       if (!settings.enabled) return;
       const config = settings.currentConfig;
 
+      let hasNonEditorMutation = false;
+
       // Track LeetCode judging/pending status transition
       for (const m of mutations) {
+        if (this.isEditorMutationTarget(m.target)) {
+          continue;
+        }
+        hasNonEditorMutation = true;
+
         if (m.type === 'childList' || m.type === 'characterData') {
           const target = m.target as HTMLElement;
           const text = target.textContent?.trim().toLowerCase() || '';
@@ -258,6 +283,12 @@ export class LeetCodeAdapter {
             }
           }
         }
+      }
+
+      // If no submission is pending and all mutations were isolated to Monaco editor keystrokes,
+      // skip expensive full-DOM queries to preserve high-performance coding responsiveness.
+      if (!this.submissionPending && !hasNonEditorMutation) {
+        return;
       }
 
       // Check for Accepted verdict
@@ -295,17 +326,11 @@ export class LeetCodeAdapter {
               this.submissionPending = false;
               this.currentSubmissionSessionId = null;
 
-              if (config.confettiEnabled) {
-                fireAcceptedCelebration({
-                  anchorElement: el as HTMLElement,
-                  themeAccent: config.accentColor,
-                  verdictText: 'ACCEPTED',
-                });
-              }
-
-              if (config.soundEnabled) {
-                playAcceptedSound(config.soundVolume, true);
-              }
+              verdictTriggerController.triggerAccepted({
+                anchorElement: el as HTMLElement,
+                config,
+                verdictText: 'ACCEPTED',
+              });
             }
           } else {
             // Mark baseline or unconfirmed element as seen
@@ -336,9 +361,7 @@ export class LeetCodeAdapter {
           if (this.submissionPending && (Date.now() - this.submissionPendingTime < 45000)) {
             this.submissionPending = false;
             this.currentSubmissionSessionId = null;
-            if (config.soundEnabled) {
-              playRejectedSound(config.soundVolume, true);
-            }
+            verdictTriggerController.triggerRejected({ config });
           }
         }
       });
@@ -353,42 +376,8 @@ export class LeetCodeAdapter {
     });
   }
 
-  private renderQuickPill(config: ThemeConfig): void {
-    if (!document.body) return;
-
-    if (!this.quickPill) {
-      this.quickPill = document.createElement('div');
-      this.quickPill.id = 'themeflow-quick-pill';
-      this.quickPill.title = 'ThemeFlow LeetCode: Click to open Theme Studio';
-      this.quickPill.addEventListener('click', () => {
-        if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
-          chrome.runtime.sendMessage({ action: 'open_studio' });
-        }
-      });
-      document.body.appendChild(this.quickPill);
-    }
-
-    this.quickPill.innerHTML = `
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="10"></circle>
-        <path d="m4.93 4.93 4.24 4.24"></path>
-        <path d="m14.83 9.17 4.24-4.24"></path>
-        <path d="m14.83 14.83 4.24 4.24"></path>
-        <path d="m9.17 14.83-4.24 4.24"></path>
-      </svg>
-      <span class="tf-pill-text">LeetCode • ${config.name}</span>
-    `;
-  }
-
-  private removeQuickPill(): void {
-    if (this.quickPill && this.quickPill.parentNode) {
-      this.quickPill.parentNode.removeChild(this.quickPill);
-      this.quickPill = null;
-    }
-  }
-
   public destroy(): void {
-    stopAcceptedCelebration();
+    verdictTriggerController.stop();
     if (this.observer) {
       this.observer.disconnect();
       this.observer = null;
@@ -409,7 +398,7 @@ export class LeetCodeAdapter {
       window.removeEventListener('popstate', this.boundPopstateHandler);
       this.boundPopstateHandler = null;
     }
-    this.removeQuickPill();
+    this.quickPill.destroy();
     if (this.weAddedDarkClass) {
       document.documentElement.classList.remove('dark');
       document.documentElement.removeAttribute('data-theme');

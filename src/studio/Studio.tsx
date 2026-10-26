@@ -40,6 +40,7 @@ import {
 import { playAcceptedSound, playRejectedSound } from '../audio/soundPlayer';
 import { fireAcceptedCelebration, stopAcceptedCelebration } from '../effects/celebration';
 import { EffectManager } from '../effects/particles';
+import { computeSurfaceTokens } from '../core/themeEngine';
 import './Studio.css';
 
 const ACCENT_COLORS = [
@@ -223,26 +224,12 @@ export const Studio: React.FC = () => {
     );
   }
 
-  // Calculate refined surface values for live preview
-  let previewOverlayColor = `rgba(10, 11, 16, ${Math.min(0.92, Math.max(0.35, config.overlayOpacity))})`;
-  let previewCardBg = `rgba(16, 18, 24, ${Math.min(0.98, Math.max(0.75, config.cardGlassOpacity))})`;
-  let previewCardBorder = 'rgba(255, 255, 255, 0.08)';
-  let previewTextPrimary = '#f8fafc';
-
-  if (config.mode === 'midnight') {
-    previewOverlayColor = `rgba(3, 4, 7, ${Math.max(0.88, config.overlayOpacity)})`;
-    previewCardBg = `rgba(9, 10, 14, ${Math.max(0.94, config.cardGlassOpacity)})`;
-    previewCardBorder = 'rgba(255, 255, 255, 0.05)';
-  } else if (config.mode === 'glass') {
-    previewOverlayColor = `rgba(12, 13, 20, ${config.overlayOpacity * 0.8})`;
-    previewCardBg = `rgba(20, 22, 32, ${Math.max(0.65, config.cardGlassOpacity * 0.85)})`;
-    previewCardBorder = 'rgba(255, 255, 255, 0.12)';
-  } else if (config.mode === 'light') {
-    previewOverlayColor = `rgba(241, 245, 249, ${config.overlayOpacity * 0.9})`;
-    previewCardBg = `rgba(255, 255, 255, ${Math.max(0.9, config.cardGlassOpacity)})`;
-    previewCardBorder = 'rgba(0, 0, 0, 0.08)';
-    previewTextPrimary = '#0f172a';
-  }
+  // Calculate coordinated surface values for live preview using shared theme engine logic
+  const previewSurfaces = computeSurfaceTokens(config.mode, config.overlayOpacity, config.cardGlassOpacity);
+  const previewOverlayColor = previewSurfaces.overlayColor;
+  const previewCardBg = previewSurfaces.panelBg;
+  const previewCardBorder = previewSurfaces.border;
+  const previewTextPrimary = previewSurfaces.textPrimary;
 
   return (
     <div className="studio-container">

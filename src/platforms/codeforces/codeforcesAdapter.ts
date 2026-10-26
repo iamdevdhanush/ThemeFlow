@@ -1,13 +1,13 @@
 import { UserSettings, ThemeConfig } from '../../types/theme';
-import { fireAcceptedCelebration, stopAcceptedCelebration } from '../../effects/celebration';
-import { playAcceptedSound, playRejectedSound } from '../../audio/soundPlayer';
+import { verdictTriggerController } from '../../effects/verdictTriggerController';
+import { QuickPillController } from '../common/QuickPillController';
 
 export class CodeforcesAdapter {
   private observer: MutationObserver | null = null;
   private alertedVerdicts = new Set<string>();
   private historicalSubmissionIds = new Set<string>();
   private evaluatingSubmissions = new Set<string>();
-  private quickPill: HTMLElement | null = null;
+  private quickPill = new QuickPillController({ platformName: 'Codeforces' });
   private boundSubmitHandler: ((e: MouseEvent) => void) | null = null;
 
   public init(settings: UserSettings): void {
@@ -15,15 +15,15 @@ export class CodeforcesAdapter {
     this.attachSubmitListener();
     this.initVerdictWatcher(settings);
     if (settings.quickSwitchVisible && settings.enabled) {
-      this.renderQuickPill(settings.currentConfig);
+      this.quickPill.render(settings.currentConfig);
     }
   }
 
   public update(settings: UserSettings): void {
     if (!settings.enabled || !settings.quickSwitchVisible) {
-      this.removeQuickPill();
+      this.quickPill.remove();
     } else {
-      this.renderQuickPill(settings.currentConfig);
+      this.quickPill.render(settings.currentConfig);
     }
   }
 
@@ -107,17 +107,11 @@ export class CodeforcesAdapter {
           this.alertedVerdicts.add(key);
           this.evaluatingSubmissions.delete(submissionId);
 
-          if (config.confettiEnabled) {
-            fireAcceptedCelebration({
-              anchorElement: el as HTMLElement,
-              themeAccent: config.accentColor,
-              verdictText: 'ACCEPTED',
-            });
-          }
-
-          if (config.soundEnabled) {
-            playAcceptedSound(config.soundVolume, true);
-          }
+          verdictTriggerController.triggerAccepted({
+            anchorElement: el as HTMLElement,
+            config,
+            verdictText: 'ACCEPTED',
+          });
         }
       });
 
@@ -139,9 +133,7 @@ export class CodeforcesAdapter {
           this.alertedVerdicts.add(key);
           this.evaluatingSubmissions.delete(submissionId);
 
-          if (config.soundEnabled) {
-            playRejectedSound(config.soundVolume, true);
-          }
+          verdictTriggerController.triggerRejected({ config });
         }
       });
     });
@@ -155,42 +147,8 @@ export class CodeforcesAdapter {
     });
   }
 
-  private renderQuickPill(config: ThemeConfig): void {
-    if (!document.body) return;
-
-    if (!this.quickPill) {
-      this.quickPill = document.createElement('div');
-      this.quickPill.id = 'themeflow-quick-pill';
-      this.quickPill.title = 'ThemeFlow Codeforces: Click to open Theme Studio';
-      this.quickPill.addEventListener('click', () => {
-        if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
-          chrome.runtime.sendMessage({ action: 'open_studio' });
-        }
-      });
-      document.body.appendChild(this.quickPill);
-    }
-
-    this.quickPill.innerHTML = `
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="10"></circle>
-        <path d="m4.93 4.93 4.24 4.24"></path>
-        <path d="m14.83 9.17 4.24-4.24"></path>
-        <path d="m14.83 14.83 4.24 4.24"></path>
-        <path d="m9.17 14.83-4.24 4.24"></path>
-      </svg>
-      <span class="tf-pill-text">Codeforces • ${config.name}</span>
-    `;
-  }
-
-  private removeQuickPill(): void {
-    if (this.quickPill && this.quickPill.parentNode) {
-      this.quickPill.parentNode.removeChild(this.quickPill);
-      this.quickPill = null;
-    }
-  }
-
   public destroy(): void {
-    stopAcceptedCelebration();
+    verdictTriggerController.stop();
     if (this.observer) {
       this.observer.disconnect();
       this.observer = null;
@@ -199,6 +157,6 @@ export class CodeforcesAdapter {
       document.removeEventListener('click', this.boundSubmitHandler, true);
       this.boundSubmitHandler = null;
     }
-    this.removeQuickPill();
+    this.quickPill.destroy();
   }
 }
