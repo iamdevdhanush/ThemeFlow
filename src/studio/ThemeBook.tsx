@@ -307,7 +307,7 @@ export const ThemeBook: React.FC<ThemeBookProps> = ({
             
             <div className="page-header-meta">
               <span className="page-category-label">Atmosphere Specimen</span>
-              <span className="page-mode-badge" style={{ borderColor: `${currentItem.accentColor}44` }}>
+              <span className="page-mode-badge">
                 {currentItem.mode} surface
               </span>
             </div>
@@ -317,7 +317,7 @@ export const ThemeBook: React.FC<ThemeBookProps> = ({
                 THEME #{String(currentIndex + 1).padStart(2, '0')}
               </div>
 
-              <h2 className="page-theme-title" style={{ color: currentItem.accentColor }}>
+              <h2 className="page-theme-title">
                 {currentItem.name}
               </h2>
 
@@ -332,7 +332,7 @@ export const ThemeBook: React.FC<ThemeBookProps> = ({
                   </span>
                 ))}
                 {currentItem.isCustom && (
-                  <span className="page-tag-chip custom-chip" style={{ color: currentItem.accentColor }}>
+                  <span className="page-tag-chip custom-chip">
                     Custom Upload
                   </span>
                 )}

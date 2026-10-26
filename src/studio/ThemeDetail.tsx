@@ -98,7 +98,7 @@ export const ThemeDetail: React.FC<ThemeDetailProps> = ({
           </button>
 
           <div className="detail-title-group">
-            <h1 className="detail-theme-heading" style={{ color: config.accentColor }}>
+            <h1 className="detail-theme-heading">
               {config.name || themeItem.name}
             </h1>
             {isActiveTheme ? (
@@ -225,7 +225,7 @@ export const ThemeDetail: React.FC<ThemeDetailProps> = ({
                 style={{
                   background: `linear-gradient(to right, var(--tf-accent) 0%, var(--tf-accent) ${
                     ((config.overlayOpacity - 0.1) / 0.85) * 100
-                  }%, rgba(255, 255, 255, 0.08) ${((config.overlayOpacity - 0.1) / 0.85) * 100}%, rgba(255, 255, 255, 0.08) 100%)`,
+                  }%, #E5E7DE ${((config.overlayOpacity - 0.1) / 0.85) * 100}%, #E5E7DE 100%)`,
                 }}
               />
             </div>
@@ -246,7 +246,7 @@ export const ThemeDetail: React.FC<ThemeDetailProps> = ({
                 style={{
                   background: `linear-gradient(to right, var(--tf-accent) 0%, var(--tf-accent) ${
                     ((config.cardGlassOpacity - 0.3) / 0.68) * 100
-                  }%, rgba(255, 255, 255, 0.08) ${((config.cardGlassOpacity - 0.3) / 0.68) * 100}%, rgba(255, 255, 255, 0.08) 100%)`,
+                  }%, #E5E7DE ${((config.cardGlassOpacity - 0.3) / 0.68) * 100}%, #E5E7DE 100%)`,
                 }}
               />
             </div>
@@ -267,7 +267,7 @@ export const ThemeDetail: React.FC<ThemeDetailProps> = ({
                 style={{
                   background: `linear-gradient(to right, var(--tf-accent) 0%, var(--tf-accent) ${
                     (config.blur / 20) * 100
-                  }%, rgba(255, 255, 255, 0.08) ${(config.blur / 20) * 100}%, rgba(255, 255, 255, 0.08) 100%)`,
+                  }%, #E5E7DE ${(config.blur / 20) * 100}%, #E5E7DE 100%)`,
                 }}
               />
             </div>
@@ -288,7 +288,7 @@ export const ThemeDetail: React.FC<ThemeDetailProps> = ({
                 style={{
                   background: `linear-gradient(to right, var(--tf-accent) 0%, var(--tf-accent) ${
                     ((config.brightness - 40) / 90) * 100
-                  }%, rgba(255, 255, 255, 0.08) ${((config.brightness - 40) / 90) * 100}%, rgba(255, 255, 255, 0.08) 100%)`,
+                  }%, #E5E7DE ${((config.brightness - 40) / 90) * 100}%, #E5E7DE 100%)`,
                 }}
               />
             </div>
