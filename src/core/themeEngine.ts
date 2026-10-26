@@ -115,13 +115,24 @@ export class ThemeEngine {
 
   public async resolveImageUrl(config: ThemeConfig): Promise<string> {
     if (config.isCustom && config.id) {
-      const dbUrl = await getCustomImageFromDB(config.id);
-      if (dbUrl) return dbUrl;
-      if (config.imagePath && config.imagePath.startsWith('data:')) return config.imagePath;
+      try {
+        const dbUrl = await getCustomImageFromDB(config.id);
+        if (dbUrl && (dbUrl.startsWith('data:') || dbUrl.startsWith('blob:'))) {
+          return dbUrl;
+        }
+      } catch (err) {
+        console.warn('[ThemeFlow] Error resolving custom image from DB:', err);
+      }
+
+      if (config.imagePath && (config.imagePath.startsWith('data:') || config.imagePath.startsWith('blob:'))) {
+        return config.imagePath;
+      }
+
+      console.warn(`[ThemeFlow] Custom wallpaper image record not found for theme "${config.name || config.id}". Falling back to default asset.`);
     }
 
     let cleanPath = (config.imagePath || '').replace(/^[\\/]+/, '').replace(/^\.\//, '');
-    if (!cleanPath) {
+    if (!cleanPath || cleanPath.startsWith('custom_') || cleanPath.startsWith('data:') || cleanPath.startsWith('blob:')) {
       cleanPath = 'IMAGES/galaxy.jpg';
     }
 

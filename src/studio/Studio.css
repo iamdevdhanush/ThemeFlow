@@ -395,6 +395,40 @@ body {
   text-transform: capitalize;
 }
 
+.wallpaper-mode-tag.custom-tag {
+  color: var(--tf-accent-light);
+  font-weight: 600;
+}
+
+.wallpaper-delete-btn {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  background: rgba(15, 15, 22, 0.75);
+  color: #f87171;
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease, background 0.15s ease;
+  z-index: 2;
+}
+
+.wallpaper-card:hover .wallpaper-delete-btn {
+  opacity: 1;
+}
+
+.wallpaper-delete-btn:hover {
+  background: #dc2626;
+  color: #ffffff;
+  border-color: #ef4444;
+}
+
 /* Custom Wallpaper Upload Card */
 .upload-card {
   border: 1px dashed var(--tf-border);

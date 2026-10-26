@@ -18,6 +18,7 @@ import {
   ChevronDown,
   Palette,
   Activity,
+  Trash2,
 } from 'lucide-react';
 import {
   UserSettings,
@@ -36,6 +37,7 @@ import {
   saveSettings,
   saveCustomImageToDB,
   getCustomImageFromDB,
+  deleteCustomImageFromDB,
 } from '../storage/storage';
 import { playAcceptedSound, playRejectedSound } from '../audio/soundPlayer';
 import { fireAcceptedCelebration, stopAcceptedCelebration } from '../effects/celebration';
@@ -125,15 +127,97 @@ export const Studio: React.FC = () => {
     await saveSettings(updatedSettings);
   };
 
+  const createThumbnail = (dataUrl: string, maxWidth = 360, maxHeight = 200): Promise<string> => {
+    return new Promise((resolve) => {
+      if (typeof document === 'undefined') {
+        return resolve(dataUrl);
+      }
+      const img = new Image();
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+        if (height > maxHeight) {
+          width = Math.round((width * maxHeight) / height);
+          height = maxHeight;
+        }
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, width);
+          canvas.height = Math.max(1, height);
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            const thumb = canvas.toDataURL('image/webp', 0.8) || canvas.toDataURL('image/jpeg', 0.8);
+            resolve(thumb || dataUrl);
+            return;
+          }
+        } catch {
+          // Fallback if canvas is tainted or unsupported
+        }
+        resolve(dataUrl);
+      };
+      img.onerror = () => resolve(dataUrl);
+      img.src = dataUrl;
+    });
+  };
+
   const handleSelectPreset = async (presetId: string) => {
+    // 1. Built-in presets
     const preset = THEME_PRESETS.find((p) => p.id === presetId);
-    if (!preset) return;
-    const newConfig = presetToConfig(preset);
+    if (preset) {
+      const newConfig = presetToConfig(preset);
+      const updatedSettings: UserSettings = {
+        ...settings,
+        activeThemeId: preset.id,
+        currentConfig: newConfig,
+      };
+      setSettings(updatedSettings);
+      await saveSettings(updatedSettings);
+      return;
+    }
+
+    // 2. Custom themes
+    const custom = (settings.customThemes || []).find((c) => c.id === presetId);
+    if (custom) {
+      const updatedSettings: UserSettings = {
+        ...settings,
+        activeThemeId: custom.id,
+        currentConfig: { ...custom },
+      };
+      setSettings(updatedSettings);
+      await saveSettings(updatedSettings);
+    }
+  };
+
+  const handleDeleteCustomTheme = async (customId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm('Are you sure you want to delete this custom wallpaper?')) {
+      return;
+    }
+
+    await deleteCustomImageFromDB(customId);
+    const updatedCustom = (settings.customThemes || []).filter((c) => c.id !== customId);
+
+    let nextActiveId = settings.activeThemeId;
+    let nextConfig = settings.currentConfig;
+
+    if (settings.activeThemeId === customId) {
+      const defaultPreset = THEME_PRESETS[0]; // cosmic-void
+      nextActiveId = defaultPreset.id;
+      nextConfig = presetToConfig(defaultPreset);
+    }
+
     const updatedSettings: UserSettings = {
       ...settings,
-      activeThemeId: preset.id,
-      currentConfig: newConfig,
+      activeThemeId: nextActiveId,
+      customThemes: updatedCustom,
+      currentConfig: nextConfig,
     };
+
     setSettings(updatedSettings);
     await saveSettings(updatedSettings);
   };
@@ -142,7 +226,11 @@ export const Studio: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
+    // Reset input so selecting the same file again triggers change
+    e.target.value = '';
+
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif', 'image/svg+xml'];
+    if (!file.type.startsWith('image/') && !validTypes.includes(file.type)) {
       alert('Please upload a valid image file (PNG, JPG, WebP, AVIF).');
       return;
     }
@@ -152,33 +240,46 @@ export const Studio: React.FC = () => {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = async () => {
-      const dataUrl = reader.result as string;
+    try {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error('Failed to read image file'));
+        reader.readAsDataURL(file);
+      });
+
+      const thumbnailDataUrl = await createThumbnail(dataUrl, 360, 200);
       const customId = `custom_${Date.now()}`;
       await saveCustomImageToDB(customId, dataUrl);
+
+      const customName = file.name.replace(/\.[^/.]+$/, '').slice(0, 24) || 'Custom Wallpaper';
 
       const customConfig: ThemeConfig = {
         ...config,
         id: customId,
-        name: file.name.replace(/\.[^/.]+$/, '').slice(0, 20) || 'Custom Wallpaper',
+        name: customName,
         description: 'User uploaded custom background wallpaper.',
         imagePath: dataUrl,
-        thumbnailPath: dataUrl,
+        thumbnailPath: thumbnailDataUrl,
         isCustom: true,
       };
+
+      const updatedCustomThemes = [customConfig, ...(settings.customThemes || []).filter((c) => c.id !== customId)];
 
       const updatedSettings: UserSettings = {
         ...settings,
         activeThemeId: customId,
-        customThemes: [customConfig, ...settings.customThemes],
+        customThemes: updatedCustomThemes,
         currentConfig: customConfig,
       };
 
       setSettings(updatedSettings);
+      setPreviewBgUrl(dataUrl);
       await saveSettings(updatedSettings);
-    };
-    reader.readAsDataURL(file);
+    } catch (err: any) {
+      console.error('[ThemeFlow] Custom upload error:', err);
+      alert('Failed to upload custom wallpaper: ' + (err?.message || 'Unknown error'));
+    }
   };
 
   const handleResetDefaults = async () => {
@@ -299,7 +400,7 @@ export const Studio: React.FC = () => {
             <div className="section-heading">
               <Layers size={13} />
               <span>Atmosphere</span>
-              <span className="section-badge">{THEME_PRESETS.length}</span>
+              <span className="section-badge">{THEME_PRESETS.length + (settings.customThemes?.length || 0)}</span>
             </div>
 
             {/* Consistent Two-Column Theme Gallery */}
@@ -326,6 +427,43 @@ export const Studio: React.FC = () => {
                     <div className="wallpaper-meta">
                       <span className="wallpaper-name">{preset.name}</span>
                       <span className="wallpaper-mode-tag">{preset.defaultMode}</span>
+                    </div>
+                  </button>
+                );
+              })}
+
+              {/* User Uploaded Custom Wallpapers */}
+              {(settings.customThemes || []).map((custom) => {
+                const isActive = settings.activeThemeId === custom.id;
+                return (
+                  <button
+                    key={custom.id}
+                    type="button"
+                    className={`wallpaper-card custom-card ${isActive ? 'active' : ''}`}
+                    onClick={() => handleSelectPreset(custom.id)}
+                    aria-pressed={isActive}
+                    title={`Select ${custom.name}`}
+                  >
+                    <div className="wallpaper-thumb-box">
+                      <img src={custom.thumbnailPath || custom.imagePath} alt="" loading="lazy" />
+                      {isActive && (
+                        <div className="wallpaper-active-pill">
+                          <Check size={11} strokeWidth={3} />
+                        </div>
+                      )}
+                      <button
+                        type="button"
+                        className="wallpaper-delete-btn"
+                        onClick={(e) => handleDeleteCustomTheme(custom.id, e)}
+                        title="Delete custom wallpaper"
+                        aria-label="Delete custom wallpaper"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                    <div className="wallpaper-meta">
+                      <span className="wallpaper-name">{custom.name}</span>
+                      <span className="wallpaper-mode-tag custom-tag">Custom</span>
                     </div>
                   </button>
                 );

@@ -22,6 +22,15 @@ const DB_NAME = 'ThemeFlowDB';
 const DB_VERSION = 1;
 const IMAGE_STORE = 'custom_images';
 
+const customImageMemoryCache = new Map<string, string>();
+
+function isExtensionOrigin(): boolean {
+  if (typeof location !== 'undefined' && location.protocol) {
+    return location.protocol === 'chrome-extension:';
+  }
+  return true;
+}
+
 // Helper for IndexedDB to store custom uploaded wallpapers safely without exceeding chrome.storage quotas
 function openDatabase(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -40,7 +49,8 @@ function openDatabase(): Promise<IDBDatabase> {
   });
 }
 
-export async function saveCustomImageToDB(id: string, dataUrl: string): Promise<void> {
+async function saveCustomImageToIndexedDB(id: string, dataUrl: string): Promise<void> {
+  customImageMemoryCache.set(id, dataUrl);
   try {
     const db = await openDatabase();
     return new Promise((resolve, reject) => {
@@ -51,11 +61,14 @@ export async function saveCustomImageToDB(id: string, dataUrl: string): Promise<
       tx.onerror = () => reject(tx.error);
     });
   } catch (err) {
-    console.warn('IndexedDB custom image store fallback:', err);
+    console.warn('[ThemeFlow Storage] IndexedDB put error:', err);
   }
 }
 
-export async function getCustomImageFromDB(id: string): Promise<string | null> {
+async function getCustomImageFromIndexedDB(id: string): Promise<string | null> {
+  if (customImageMemoryCache.has(id)) {
+    return customImageMemoryCache.get(id)!;
+  }
   try {
     const db = await openDatabase();
     return new Promise((resolve) => {
@@ -63,7 +76,9 @@ export async function getCustomImageFromDB(id: string): Promise<string | null> {
       const store = tx.objectStore(IMAGE_STORE);
       const req = store.get(id);
       req.onsuccess = () => {
-        resolve(req.result ? req.result.dataUrl : null);
+        const result = req.result ? req.result.dataUrl : null;
+        if (result) customImageMemoryCache.set(id, result);
+        resolve(result);
       };
       req.onerror = () => resolve(null);
     });
@@ -72,7 +87,8 @@ export async function getCustomImageFromDB(id: string): Promise<string | null> {
   }
 }
 
-export async function deleteCustomImageFromDB(id: string): Promise<void> {
+async function deleteCustomImageFromIndexedDB(id: string): Promise<void> {
+  customImageMemoryCache.delete(id);
   try {
     const db = await openDatabase();
     return new Promise((resolve) => {
@@ -85,6 +101,94 @@ export async function deleteCustomImageFromDB(id: string): Promise<void> {
   } catch {
     // ignore
   }
+}
+
+export async function saveCustomImageToDB(id: string, dataUrl: string): Promise<void> {
+  if (!id || !dataUrl) return;
+
+  if (isExtensionOrigin()) {
+    return saveCustomImageToIndexedDB(id, dataUrl);
+  }
+
+  // If in content script on external host page, route through background worker
+  if (typeof chrome !== 'undefined' && chrome.runtime?.sendMessage) {
+    try {
+      await new Promise<void>((resolve, reject) => {
+        chrome.runtime.sendMessage(
+          { action: 'save_custom_image', id, dataUrl },
+          (res) => {
+            if (chrome.runtime.lastError) reject(chrome.runtime.lastError);
+            else resolve();
+          }
+        );
+      });
+      return;
+    } catch (err) {
+      console.warn('[ThemeFlow Storage] Failed to route saveCustomImage through runtime message:', err);
+    }
+  }
+
+  return saveCustomImageToIndexedDB(id, dataUrl);
+}
+
+export async function getCustomImageFromDB(id: string): Promise<string | null> {
+  if (!id) return null;
+
+  if (customImageMemoryCache.has(id)) {
+    return customImageMemoryCache.get(id)!;
+  }
+
+  if (isExtensionOrigin()) {
+    return getCustomImageFromIndexedDB(id);
+  }
+
+  // In content script on external host page (leetcode.com / codeforces.com), fetch from extension background worker
+  if (typeof chrome !== 'undefined' && chrome.runtime?.sendMessage) {
+    try {
+      const response = await new Promise<any>((resolve) => {
+        chrome.runtime.sendMessage(
+          { action: 'get_custom_image', id },
+          (res) => {
+            if (chrome.runtime.lastError) {
+              resolve(null);
+            } else {
+              resolve(res);
+            }
+          }
+        );
+      });
+      if (response && response.status === 'ok' && response.dataUrl) {
+        customImageMemoryCache.set(id, response.dataUrl);
+        return response.dataUrl;
+      }
+    } catch (err) {
+      console.warn('[ThemeFlow Storage] Failed to fetch custom image from background worker:', err);
+    }
+  }
+
+  return getCustomImageFromIndexedDB(id);
+}
+
+export async function deleteCustomImageFromDB(id: string): Promise<void> {
+  if (!id) return;
+  customImageMemoryCache.delete(id);
+
+  if (isExtensionOrigin()) {
+    return deleteCustomImageFromIndexedDB(id);
+  }
+
+  if (typeof chrome !== 'undefined' && chrome.runtime?.sendMessage) {
+    try {
+      await new Promise<void>((resolve) => {
+        chrome.runtime.sendMessage({ action: 'delete_custom_image', id }, () => resolve());
+      });
+      return;
+    } catch {
+      // ignore
+    }
+  }
+
+  return deleteCustomImageFromIndexedDB(id);
 }
 
 function getActiveStorageAdapter(): StorageAdapter | null {
