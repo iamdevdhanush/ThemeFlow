@@ -1,0 +1,763 @@
+/* ThemeFlow — 3D Theme Book & Atelier Design System */
+
+.theme-atelier-container {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 54px);
+  padding: 24px 32px 28px;
+  background: radial-gradient(circle at 50% 20%, #151624 0%, #090a0f 75%);
+  position: relative;
+  overflow-x: hidden;
+  user-select: none;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.theme-atelier-container.stage-transitioning {
+  opacity: 0.95;
+  transform: scale(1.02);
+}
+
+/* ==========================================================================
+   1. Atelier Stage Header
+   ========================================================================== */
+.atelier-stage-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  position: relative;
+  z-index: 10;
+}
+
+.atelier-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.atelier-tag {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--tf-accent-light);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.atelier-title {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: #ffffff;
+}
+
+.atelier-subtitle {
+  font-size: 13px;
+  color: var(--tf-text-secondary);
+  max-width: 580px;
+  line-height: 1.5;
+}
+
+.atelier-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.page-counter-pill {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--tf-border);
+  font-family: var(--tf-font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.current-page-num {
+  color: #ffffff;
+}
+
+.page-sep {
+  color: var(--tf-text-muted);
+}
+
+.total-pages-num {
+  color: var(--tf-text-secondary);
+}
+
+.btn-atelier-upload {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  border-radius: var(--tf-radius-sm);
+  background: var(--tf-bg-elevated);
+  border: 1px solid var(--tf-border);
+  color: var(--tf-text-primary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.btn-atelier-upload:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--tf-accent);
+  color: var(--tf-accent-light);
+  transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   2. 3D Book Stage Architecture
+   ========================================================================== */
+.book-3d-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 480px;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 1140px;
+  perspective: 1400px;
+  padding: 20px 0;
+}
+
+.book-ambient-glow {
+  position: absolute;
+  width: 720px;
+  height: 480px;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(80px);
+  z-index: 1;
+  transition: background 0.4s ease;
+}
+
+.book-drag-overlay {
+  position: absolute;
+  inset: 10px;
+  border: 2px dashed var(--tf-accent);
+  border-radius: var(--tf-radius-lg);
+  background: rgba(15, 17, 24, 0.92);
+  backdrop-filter: blur(12px);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--tf-accent-light);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Navigation Arrows */
+.book-nav-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(18, 20, 30, 0.85);
+  border: 1px solid var(--tf-border);
+  color: var(--tf-text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 30;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  outline: none;
+  backdrop-filter: blur(8px);
+}
+
+.book-nav-arrow:hover {
+  background: rgba(139, 92, 246, 0.2);
+  border-color: var(--tf-accent);
+  color: #ffffff;
+  transform: translateY(-50%) scale(1.1);
+}
+
+.book-nav-arrow:focus-visible {
+  outline: 2px solid var(--tf-accent);
+}
+
+.book-nav-prev {
+  left: -12px;
+}
+
+.book-nav-next {
+  right: -12px;
+}
+
+/* ==========================================================================
+   3. The Open Book Spread (Dual 3D Page Foliant)
+   ========================================================================== */
+.open-book-spread {
+  position: relative;
+  display: flex;
+  width: 960px;
+  height: 480px;
+  transform-style: preserve-3d;
+  transform: rotateX(6deg) rotateY(-1deg);
+  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.85), 0 10px 24px rgba(0, 0, 0, 0.6);
+  border-radius: var(--tf-radius-md);
+  z-index: 5;
+}
+
+.open-book-spread:hover {
+  transform: rotateX(3deg) rotateY(0deg) translateY(-2px);
+}
+
+/* Spine Crease */
+.book-spine-crease {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 24px;
+  transform: translateX(-50%);
+  background: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0.65) 0%,
+    rgba(0, 0, 0, 0.2) 35%,
+    transparent 50%,
+    rgba(0, 0, 0, 0.2) 65%,
+    rgba(0, 0, 0, 0.65) 100%
+  );
+  z-index: 20;
+  pointer-events: none;
+}
+
+/* Left & Right Pages */
+.book-page {
+  flex: 1;
+  position: relative;
+  height: 100%;
+  background: #111219;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+
+.book-page-left {
+  border-top-left-radius: var(--tf-radius-md);
+  border-bottom-left-radius: var(--tf-radius-md);
+  border: 1px solid var(--tf-border);
+  border-right: none;
+  transform-origin: right center;
+  padding: 36px 38px 28px 42px;
+  background: linear-gradient(135deg, #12131d 0%, #0d0e14 100%);
+  box-shadow: inset -15px 0 30px rgba(0, 0, 0, 0.5);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.book-page-right {
+  border-top-right-radius: var(--tf-radius-md);
+  border-bottom-right-radius: var(--tf-radius-md);
+  border: 1px solid var(--tf-border);
+  border-left: none;
+  transform-origin: left center;
+  padding: 18px 22px 20px 22px;
+  background: #090a0f;
+  box-shadow: inset 15px 0 30px rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
+  outline: none;
+}
+
+.book-page-right:hover {
+  box-shadow: inset 10px 0 20px rgba(0, 0, 0, 0.4), 0 0 24px rgba(139, 92, 246, 0.2);
+}
+
+.book-page-right:focus-visible {
+  outline: 2px solid var(--tf-accent);
+}
+
+/* Flipping Animation Classes */
+.open-book-spread.flipping-next .book-page-right {
+  animation: flipPageNext 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.open-book-spread.flipping-prev .book-page-left {
+  animation: flipPagePrev 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+@keyframes flipPageNext {
+  0% {
+    transform: rotateY(0deg);
+  }
+  50% {
+    transform: rotateY(-70deg) scale(0.96);
+  }
+  100% {
+    transform: rotateY(0deg) scale(1);
+  }
+}
+
+@keyframes flipPagePrev {
+  0% {
+    transform: rotateY(0deg);
+  }
+  50% {
+    transform: rotateY(70deg) scale(0.96);
+  }
+  100% {
+    transform: rotateY(0deg) scale(1);
+  }
+}
+
+/* ==========================================================================
+   4. Left Page Content Flow (Editorial Specimen)
+   ========================================================================== */
+.page-header-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.page-category-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--tf-text-muted);
+}
+
+.page-mode-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--tf-border);
+  color: var(--tf-text-secondary);
+  text-transform: capitalize;
+}
+
+.page-content-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+
+.theme-number-label {
+  font-family: var(--tf-font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--tf-text-muted);
+  letter-spacing: 0.08em;
+}
+
+.page-theme-title {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin-bottom: 4px;
+}
+
+.page-theme-desc {
+  font-size: 13.5px;
+  color: var(--tf-text-secondary);
+  line-height: 1.6;
+  max-width: 380px;
+}
+
+.page-tags-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.page-tag-chip {
+  font-size: 10.5px;
+  color: var(--tf-text-muted);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--tf-border-subtle);
+}
+
+.page-tag-chip.custom-chip {
+  background: rgba(139, 92, 246, 0.12);
+  border-color: rgba(139, 92, 246, 0.3);
+  font-weight: 600;
+}
+
+/* Palette & Specimen Bar */
+.page-specimen-box {
+  margin-top: 14px;
+  padding: 12px 14px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: var(--tf-radius-sm);
+  border: 1px solid var(--tf-border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.specimen-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--tf-text-muted);
+}
+
+.specimen-hex {
+  font-family: var(--tf-font-mono);
+  font-weight: 700;
+}
+
+.specimen-swatch-bar {
+  display: flex;
+  height: 10px;
+  border-radius: 9999px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+.specimen-swatch-fill {
+  flex: 1;
+}
+
+/* Left Page Footer Actions */
+.page-footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 16px;
+}
+
+.btn-apply-theme {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 9px 18px;
+  border-radius: var(--tf-radius-sm);
+  background: var(--tf-accent);
+  color: #ffffff;
+  font-size: 12.5px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 12px var(--tf-accent-glow);
+}
+
+.btn-apply-theme:hover {
+  background: #7c3aed;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 18px var(--tf-accent-glow);
+}
+
+.btn-apply-theme.is-active {
+  background: var(--tf-success-muted);
+  border: 1px solid rgba(74, 222, 128, 0.4);
+  color: var(--tf-success-light);
+  box-shadow: 0 2px 10px rgba(34, 197, 94, 0.2);
+}
+
+.btn-page-delete {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: var(--tf-danger-light);
+  width: 34px;
+  height: 34px;
+  border-radius: var(--tf-radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-page-delete:hover {
+  background: #dc2626;
+  color: #ffffff;
+  border-color: #ef4444;
+}
+
+/* ==========================================================================
+   5. Right Page Content Flow (High-Art Wallpaper Plate)
+   ========================================================================== */
+.page-art-frame {
+  position: relative;
+  width: 100%;
+  flex: 1;
+  border-radius: var(--tf-radius-sm);
+  overflow: hidden;
+  background: #000000;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+}
+
+.page-art-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.book-page-right:hover .page-art-image {
+  transform: scale(1.03);
+}
+
+.page-art-vignette {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.7) 0%,
+    rgba(0, 0, 0, 0.1) 40%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+.art-active-seal {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: rgba(16, 32, 24, 0.9);
+  border: 1px solid rgba(74, 222, 128, 0.4);
+  color: var(--tf-success-light);
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+}
+
+.page-art-inspect-pill {
+  position: absolute;
+  bottom: 14px;
+  right: 14px;
+  background: rgba(13, 14, 22, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  padding: 7px 14px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.book-page-right:hover .page-art-inspect-pill {
+  background: var(--tf-accent);
+  border-color: var(--tf-accent-light);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px var(--tf-accent-glow);
+}
+
+.inspect-arrow {
+  transition: transform 0.2s ease;
+}
+
+.book-page-right:hover .inspect-arrow {
+  transform: translateX(3px);
+}
+
+.page-art-caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 4px 0 4px;
+}
+
+.caption-text-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.caption-heading {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--tf-text-primary);
+}
+
+.caption-sub {
+  font-size: 10.5px;
+  color: var(--tf-text-muted);
+}
+
+.caption-icon {
+  color: var(--tf-text-muted);
+  transition: color 0.15s ease;
+}
+
+.book-page-right:hover .caption-icon {
+  color: var(--tf-accent-light);
+}
+
+/* ==========================================================================
+   6. Quick Thumbnail Dock Navigator
+   ========================================================================== */
+.book-dock-navigator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 18px;
+  margin: 18px auto 0;
+  max-width: 960px;
+  overflow-x: auto;
+  border-radius: var(--tf-radius-lg);
+  background: rgba(15, 17, 24, 0.8);
+  border: 1px solid var(--tf-border);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+}
+
+.book-dock-navigator::-webkit-scrollbar {
+  height: 4px;
+}
+
+.book-dock-navigator::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.dock-theme-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: var(--tf-radius-sm);
+  transition: transform 0.15s ease, opacity 0.15s ease;
+  outline: none;
+  opacity: 0.65;
+}
+
+.dock-theme-item:hover {
+  opacity: 1;
+  transform: translateY(-2px);
+}
+
+.dock-theme-item.selected {
+  opacity: 1;
+  transform: translateY(-3px);
+}
+
+.dock-theme-item:focus-visible {
+  outline: 2px solid var(--tf-accent);
+}
+
+.dock-thumb-box {
+  position: relative;
+  width: 58px;
+  height: 36px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #000000;
+  border: 1px solid var(--tf-border);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.dock-theme-item.selected .dock-thumb-box {
+  border-color: var(--tf-accent);
+  box-shadow: 0 0 0 2px var(--tf-accent), 0 4px 12px rgba(0, 0, 0, 0.6);
+}
+
+.dock-thumb-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.dock-active-dot {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+}
+
+.dock-theme-title {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--tf-text-secondary);
+  max-width: 64px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dock-theme-item.selected .dock-theme-title {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   7. Reduced Motion & Responsive Adaptations
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .open-book-spread,
+  .book-page-left,
+  .book-page-right,
+  .page-art-image {
+    transform: none !important;
+    transition: opacity 0.2s ease !important;
+    animation: none !important;
+  }
+}
+
+@media (max-width: 1040px) {
+  .open-book-spread {
+    width: 100%;
+    height: auto;
+    flex-direction: column;
+    transform: none;
+  }
+
+  .book-spine-crease {
+    display: none;
+  }
+
+  .book-page-left,
+  .book-page-right {
+    border-radius: var(--tf-radius-md);
+    border: 1px solid var(--tf-border);
+  }
+
+  .book-page-right {
+    min-height: 280px;
+  }
+}
