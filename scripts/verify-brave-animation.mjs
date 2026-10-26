@@ -321,60 +321,57 @@ async function run() {
     // Check if celebration container appeared
     const containerCheck = await client.send('Runtime.evaluate', {
       expression: `(() => {
-        const c = document.getElementById('themeflow-seam-celebration') || document.getElementById('themeflow-anime-celebration');
+        const c = document.getElementById('themeflow-anime-celebration');
         if (!c) return { found: false };
         const rect = c.getBoundingClientRect();
-        const tension = c.querySelector('.seam-tension-layer');
+        const dim = c.querySelector('.tf-domain-dim');
         const svg = c.querySelector('svg');
-        const impact = c.querySelector('.seam-impact-frame');
         const canvas = c.querySelector('canvas');
-        const victory = c.querySelector('.seam-victory-container');
-        const title = c.querySelector('.seam-accepted-text');
-        const seal = c.querySelector('.seam-vermillion-seal');
+        const victory = c.querySelector('.tf-domain-victory');
+        const title = c.querySelector('.tf-victory-title');
         return {
           found: true,
           rect: { left: rect.left, top: rect.top, width: rect.width, height: rect.height },
-          hasTension: Boolean(tension),
+          hasDim: Boolean(dim),
           hasSvg: Boolean(svg),
-          hasImpact: Boolean(impact),
           hasCanvas: Boolean(canvas),
           hasVictory: Boolean(victory),
           titleText: title?.textContent,
-          hasSeal: Boolean(seal),
         };
       })()`,
       returnByValue: true,
     });
 
-    console.log('DOM Inspection of SEAM Celebration Stage:', containerCheck.result?.value);
+    console.log('DOM Inspection of Celebration Stage:', containerCheck.result?.value);
 
+    // Take screenshot during Phase 1 & 2 (Impact & Slash / Shockwave / Victory reveal)
     const artifactDir = path.resolve('scripts/verification_output');
     if (!fs.existsSync(artifactDir)) fs.mkdirSync(artifactDir, { recursive: true });
 
-    // Capture Frame 04: The Seam Opens & Directional Sparks (~650ms)
-    await sleep(450);
+    // Capture at ~280ms (Peak slash, shockwave, and victory reveal)
+    await sleep(120);
     const shot1 = await client.send('Page.captureScreenshot', { format: 'png' });
-    fs.writeFileSync(path.join(artifactDir, 'seam_frame04_seam_opens.png'), Buffer.from(shot1.data, 'base64'));
-    console.log('[SAVED] Screenshot: seam_frame04_seam_opens.png');
+    fs.writeFileSync(path.join(artifactDir, 'domain_expansion_impact_280ms.png'), Buffer.from(shot1.data, 'base64'));
+    console.log('[SAVED] Screenshot: domain_expansion_impact_280ms.png');
 
-    // Capture Frame 06: Victory Hold with ACCEPTED & Vermillion AC Seal (~1300ms)
-    await sleep(650);
+    // Capture at ~700ms (Expanding shockwave rings, directional shard burst, glowing victory title)
+    await sleep(400);
     const shot2 = await client.send('Page.captureScreenshot', { format: 'png' });
-    fs.writeFileSync(path.join(artifactDir, 'seam_frame06_victory_hold.png'), Buffer.from(shot2.data, 'base64'));
-    console.log('[SAVED] Screenshot: seam_frame06_victory_hold.png');
+    fs.writeFileSync(path.join(artifactDir, 'domain_expansion_victory_700ms.png'), Buffer.from(shot2.data, 'base64'));
+    console.log('[SAVED] Screenshot: domain_expansion_victory_700ms.png');
 
-    // Capture Frame 08: Back to Normal (~2300ms)
-    await sleep(1100);
+    // Capture at ~2100ms (Post teardown, ensuring 100% clean restoration with 0 shifts)
+    await sleep(1400);
     const shot3 = await client.send('Page.captureScreenshot', { format: 'png' });
-    fs.writeFileSync(path.join(artifactDir, 'seam_frame08_back_to_normal.png'), Buffer.from(shot3.data, 'base64'));
-    console.log('[SAVED] Screenshot: seam_frame08_back_to_normal.png');
+    fs.writeFileSync(path.join(artifactDir, 'domain_expansion_resolved_2100ms.png'), Buffer.from(shot3.data, 'base64'));
+    console.log('[SAVED] Screenshot: domain_expansion_resolved_2100ms.png');
 
     // Verify teardown
     const postCheck = await client.send('Runtime.evaluate', {
-      expression: `Boolean(document.getElementById('themeflow-seam-celebration') || document.getElementById('themeflow-anime-celebration'))`,
+      expression: `Boolean(document.getElementById('themeflow-anime-celebration'))`,
       returnByValue: true,
     });
-    console.log('Container present after 2300ms (should be false):', postCheck.result?.value);
+    console.log('Container present after 2100ms (should be false):', postCheck.result?.value);
 
     client.close();
     console.log('\n--- Brave Browser Visual Verification Finished Successfully! ---');
