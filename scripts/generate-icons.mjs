@@ -52,6 +52,17 @@ const svgIcon = `
 
 async function generateIcons() {
   const sizes = [16, 32, 48, 128, 512];
+  const force = process.argv.includes('--force');
+  const allExist = sizes.every(s => {
+    const p = path.join(publicIconsDir, `icon${s}.png`);
+    return fs.existsSync(p) && fs.statSync(p).size > 0;
+  }) && fs.existsSync(path.join(publicIconsDir, 'icon.svg'));
+
+  if (!force && allExist) {
+    console.log('[OK] All required icons (16, 32, 48, 128, 512) already exist. Skipping generation (use --force to regenerate).');
+    return;
+  }
+
   for (const size of sizes) {
     const outPath = path.join(publicIconsDir, `icon${size}.png`);
     await sharp(Buffer.from(svgIcon))

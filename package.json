@@ -1,6 +1,6 @@
 {
   "name": "themeflow",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "ThemeFlow — A Premium Codeforces Theme Studio Chrome Extension",
   "type": "module",
   "scripts": {
@@ -10,7 +10,8 @@
     "generate:sounds": "node scripts/generate-sounds.mjs",
     "typecheck": "tsc --noEmit",
     "test": "npx tsx scripts/test-celebration.mjs && npx tsx scripts/test-phase1-phase2.mjs && npx tsx scripts/test-phase3-controllers.mjs",
-    "build": "node scripts/inspect-images.mjs && node scripts/generate-icons.mjs && node scripts/generate-sounds.mjs && node scripts/build.mjs"
+    "build": "node scripts/inspect-images.mjs && node scripts/generate-icons.mjs && node scripts/generate-sounds.mjs && node scripts/build.mjs && node scripts/verify-assets.mjs",
+    "package": "npm run build && node scripts/package.mjs"
   },
   "repository": {
     "type": "git",

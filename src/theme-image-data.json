@@ -12,11 +12,11 @@
   {
     "filename": "galaxy.jpg",
     "format": "jpeg",
-    "width": 5903,
-    "height": 3766,
+    "width": 2560,
+    "height": 1633,
     "space": "srgb",
     "channels": 3,
-    "sizeBytes": 5707253,
+    "sizeBytes": 1369914,
     "hasAlpha": false
   },
   {

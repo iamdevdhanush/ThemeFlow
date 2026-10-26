@@ -138,6 +138,14 @@ function generateWaChime() {
   return createWavBuffer(sampleRate, samples);
 }
 
-fs.writeFileSync(path.join(soundsDir, 'ac.wav'), generateAnimeFinisherSound());
-fs.writeFileSync(path.join(soundsDir, 'wa.wav'), generateWaChime());
-console.log('Successfully generated Anime Finisher sound (public/sounds/ac.wav) and wa.wav');
+const acPath = path.join(soundsDir, 'ac.wav');
+const waPath = path.join(soundsDir, 'wa.wav');
+const force = process.argv.includes('--force');
+
+if (!force && fs.existsSync(acPath) && fs.existsSync(waPath) && fs.statSync(acPath).size > 0 && fs.statSync(waPath).size > 0) {
+  console.log('[OK] Sound assets (ac.wav, wa.wav) already exist and are valid. Skipping generation (use --force to regenerate).');
+} else {
+  fs.writeFileSync(acPath, generateAnimeFinisherSound());
+  fs.writeFileSync(waPath, generateWaChime());
+  console.log('Successfully generated Anime Finisher sound (public/sounds/ac.wav) and wa.wav');
+}
