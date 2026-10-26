@@ -323,67 +323,58 @@ async function run() {
       expression: `(() => {
         const c = document.getElementById('themeflow-anime-celebration');
         if (!c) return { found: false };
-        const desaturate = c.querySelector('.tf-seam-desaturate');
-        const corners = c.querySelector('.tf-seam-ink-corners');
+        const rect = c.getBoundingClientRect();
+        const dim = c.querySelector('.tf-domain-dim');
         const svg = c.querySelector('svg');
-        const impact = c.querySelector('.tf-seam-impact-frame');
-        const canvas = c.querySelector('.tf-seam-sparks');
-        const ribbon = c.querySelector('.tf-seam-reveal-container');
-        const seal = c.querySelector('.tf-seam-vermillion-seal');
-        const title = c.querySelector('.tf-seam-title');
+        const canvas = c.querySelector('canvas');
+        const victory = c.querySelector('.tf-domain-victory');
+        const title = c.querySelector('.tf-victory-title');
         return {
           found: true,
-          hasDesaturate: Boolean(desaturate),
-          hasInkCorners: Boolean(corners),
+          rect: { left: rect.left, top: rect.top, width: rect.width, height: rect.height },
+          hasDim: Boolean(dim),
           hasSvg: Boolean(svg),
-          hasImpact: Boolean(impact),
           hasCanvas: Boolean(canvas),
-          hasRibbon: Boolean(ribbon),
-          hasVermillionSeal: Boolean(seal),
+          hasVictory: Boolean(victory),
           titleText: title?.textContent,
         };
       })()`,
       returnByValue: true,
     });
 
-    console.log('DOM Inspection of SEAM Motion Sequence:', containerCheck.result?.value);
+    console.log('DOM Inspection of Celebration Stage:', containerCheck.result?.value);
 
+    // Take screenshot during Phase 1 & 2 (Impact & Slash / Shockwave / Victory reveal)
     const artifactDir = path.resolve('scripts/verification_output');
     if (!fs.existsSync(artifactDir)) fs.mkdirSync(artifactDir, { recursive: true });
 
-    // Scene 2/3: Capture at ~380ms (The Cut & Manga Impact frame)
-    await sleep(220);
-    const shotCut = await client.send('Page.captureScreenshot', { format: 'png' });
-    fs.writeFileSync(path.join(artifactDir, 'seam_scene2_cut_impact_380ms.png'), Buffer.from(shotCut.data, 'base64'));
-    console.log('[SAVED] Screenshot: seam_scene2_cut_impact_380ms.png');
+    // Capture at ~280ms (Peak slash, shockwave, and victory reveal)
+    await sleep(120);
+    const shot1 = await client.send('Page.captureScreenshot', { format: 'png' });
+    fs.writeFileSync(path.join(artifactDir, 'domain_expansion_impact_280ms.png'), Buffer.from(shot1.data, 'base64'));
+    console.log('[SAVED] Screenshot: domain_expansion_impact_280ms.png');
 
-    // Scene 4: Capture at ~650ms (The Seam Opens & Directional Sparks)
-    await sleep(270);
-    const shotSparks = await client.send('Page.captureScreenshot', { format: 'png' });
-    fs.writeFileSync(path.join(artifactDir, 'seam_scene4_sparks_650ms.png'), Buffer.from(shotSparks.data, 'base64'));
-    console.log('[SAVED] Screenshot: seam_scene4_sparks_650ms.png');
+    // Capture at ~700ms (Expanding shockwave rings, directional shard burst, glowing victory title)
+    await sleep(400);
+    const shot2 = await client.send('Page.captureScreenshot', { format: 'png' });
+    fs.writeFileSync(path.join(artifactDir, 'domain_expansion_victory_700ms.png'), Buffer.from(shot2.data, 'base64'));
+    console.log('[SAVED] Screenshot: domain_expansion_victory_700ms.png');
 
-    // Scene 5 & 6: Capture at ~1200ms (The Reveal: Ink-Brush Ribbon, ACCEPTED typography, Vermillion Seal, Light Glint)
-    await sleep(550);
-    const shotReveal = await client.send('Page.captureScreenshot', { format: 'png' });
-    fs.writeFileSync(path.join(artifactDir, 'seam_scene5_reveal_victory_1200ms.png'), Buffer.from(shotReveal.data, 'base64'));
-    console.log('[SAVED] Screenshot: seam_scene5_reveal_victory_1200ms.png');
-
-    // Scene 7: Capture at ~2250ms (100% Workspace Restoration, zero residual overlays)
-    await sleep(1050);
-    const shotRestored = await client.send('Page.captureScreenshot', { format: 'png' });
-    fs.writeFileSync(path.join(artifactDir, 'seam_scene7_restored_2250ms.png'), Buffer.from(shotRestored.data, 'base64'));
-    console.log('[SAVED] Screenshot: seam_scene7_restored_2250ms.png');
+    // Capture at ~2100ms (Post teardown, ensuring 100% clean restoration with 0 shifts)
+    await sleep(1400);
+    const shot3 = await client.send('Page.captureScreenshot', { format: 'png' });
+    fs.writeFileSync(path.join(artifactDir, 'domain_expansion_resolved_2100ms.png'), Buffer.from(shot3.data, 'base64'));
+    console.log('[SAVED] Screenshot: domain_expansion_resolved_2100ms.png');
 
     // Verify teardown
     const postCheck = await client.send('Runtime.evaluate', {
       expression: `Boolean(document.getElementById('themeflow-anime-celebration'))`,
       returnByValue: true,
     });
-    console.log('Container present after 2.20s teardown (must be false):', postCheck.result?.value);
+    console.log('Container present after 2100ms (should be false):', postCheck.result?.value);
 
     client.close();
-    console.log('\n--- Brave Browser SEAM Visual Verification Finished Successfully! ---');
+    console.log('\n--- Brave Browser Visual Verification Finished Successfully! ---');
   } finally {
     braveProc.kill();
     // Clean temp profile

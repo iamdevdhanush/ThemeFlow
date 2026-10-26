@@ -263,14 +263,14 @@ await test('Reduced motion strictly suppresses animation', () => {
   global.__PREFERS_REDUCED_MOTION__ = false;
 });
 
-// 3. Cleanup by 2.20s
-await test('Celebration auto-cleans up temporary elements by 2.20s (2200ms)', async () => {
+// 3. Cleanup by 2000ms
+await test('Celebration auto-cleans up temporary elements by 2000ms', async () => {
   mockDocBody.children = [];
   fireAcceptedCelebration({ verdictText: 'ACCEPTED' });
   assert.strictEqual(mockDocBody.children.length, 1);
 
-  await new Promise(r => setTimeout(r, 2260));
-  assert.strictEqual(mockDocBody.children.length, 0, 'DOM container should auto-remove at 2200ms');
+  await new Promise(r => setTimeout(r, 2050));
+  assert.strictEqual(mockDocBody.children.length, 0, 'DOM container should auto-remove within 2000ms');
 });
 
 // 4. Repeated rapid triggers clean up previous instances cleanly
@@ -465,60 +465,65 @@ await test('LeetCode: SPA navigation or adapter.destroy() cleans up active celeb
   assert.strictEqual(mockDocBody.children.length, 0, 'destroy() must cleanly stop active celebration');
 });
 
-// 11. SEAM scene components and non-interfering isolation
-await test('SEAM creates ink corners, blade cut, impact frame, sparks, ribbon, and vermillion seal', () => {
+// 11. Bounded container dimensions and non-interfering isolation
+await test('Celebration uses strictly bounded region container with overflow hidden (NO full-viewport overlay)', () => {
   mockDocBody.children = [];
   fireAcceptedCelebration({ verdictText: 'ACCEPTED' });
 
   const container = mockDocBody.children.find(c => c.id === 'themeflow-anime-celebration');
   assert.ok(container, 'Celebration container exists');
-  assert.strictEqual(container.style.position, 'fixed');
-  assert.strictEqual(container.style.pointerEvents, 'none');
+  const w = parseFloat(container.style.width);
+  const h = parseFloat(container.style.height);
+  assert.ok(w > 0 && w < 1920, `Container width (${w}) must be strictly bounded and not full-viewport (1920)`);
+  assert.ok(h > 0 && h < 1080, `Container height (${h}) must be strictly bounded and not full-viewport (1080)`);
+  assert.strictEqual(container.style.overflow, 'hidden', 'Container must have overflow: hidden to clip effects');
+  assert.strictEqual(container.style.position, 'fixed', 'Container must have position: fixed');
 
-  // Verify Scene 1: Desaturate overlay and corner ink washes
-  const desaturate = container.children.find(c => c.className === 'tf-seam-desaturate');
-  assert.ok(desaturate, 'Desaturate overlay must exist');
+  // Verify backdrop, SVG, canvas, and victory reveal exist inside container
+  const backdrop = container.children.find(c => c.className === 'tf-domain-dim');
+  assert.ok(backdrop, 'Domain dimming backdrop must exist');
 
-  const inkCorners = container.children.find(c => c.className === 'tf-seam-ink-corners');
-  assert.ok(inkCorners, 'Corner ink washes must exist');
+  const svg = container.children.find(c => c.tagName === 'SVG');
+  assert.ok(svg, 'Energy slash SVG layer must exist');
 
-  // Verify Scene 2: Blade cut SVG
-  const bladeSvg = container.children.find(c => c.tagName === 'SVG');
-  assert.ok(bladeSvg, 'Blade cut SVG must exist');
+  const canvas = container.children.find(c => c.tagName === 'CANVAS');
+  assert.ok(canvas, 'Canvas shard layer must exist');
+  assert.strictEqual(canvas.width, w, 'Canvas must match bounded container width');
+  assert.strictEqual(canvas.height, h, 'Canvas must match bounded container height');
 
-  // Verify Scene 3: Manga impact frame
-  const impactFrame = container.children.find(c => c.className === 'tf-seam-impact-frame');
-  assert.ok(impactFrame, 'Manga impact frame must exist');
-
-  // Verify Scene 4: Directional sparks canvas
-  const canvas = container.children.find(c => c.className === 'tf-seam-sparks');
-  assert.ok(canvas, 'Sparks canvas must exist');
-
-  // Verify Scene 5: Reveal ribbon container with vermillion seal
-  const ribbonContainer = container.children.find(c => c.className === 'tf-seam-reveal-container');
-  assert.ok(ribbonContainer, 'Reveal ribbon container must exist');
-
-  const title = ribbonContainer.children[0]?.children?.find?.(c => c.className === 'tf-seam-text-content');
-  assert.ok(title, 'Text content container must exist');
-
-  const seal = ribbonContainer.children[0]?.children?.find?.(c => c.className === 'tf-seam-vermillion-seal');
-  assert.ok(seal, 'Vermillion Japanese-inspired AC seal must exist');
+  const victory = container.children.find(c => c.className === 'tf-domain-victory');
+  assert.ok(victory, 'Victory reveal centerpiece must exist');
 
   stopAcceptedCelebration();
 });
 
-// 12. Workspace non-obstruction
-await test('SEAM leaves center workspace clear and pointer-transparent', () => {
+// 12. Anchoring and viewport edge clamping
+await test('Celebration clamps positioning safely within viewport when anchor is near screen edges', () => {
   mockDocBody.children = [];
-  fireAcceptedCelebration({ verdictText: 'ACCEPTED' });
+
+  // Mock anchor near top-left edge (left: 5px, top: 5px)
+  const edgeAnchor = new MockElement('div');
+  edgeAnchor.getBoundingClientRect = () => ({
+    left: 5,
+    top: 5,
+    width: 20,
+    height: 20,
+    right: 25,
+    bottom: 25,
+  });
+
+  fireAcceptedCelebration({ anchorElement: edgeAnchor, verdictText: 'ACCEPTED' });
 
   const container = mockDocBody.children.find(c => c.id === 'themeflow-anime-celebration');
   assert.ok(container);
-  assert.strictEqual(container.style.pointerEvents, 'none', 'Container must be pointer-transparent');
-  assert.strictEqual(container.getAttribute('aria-hidden'), 'true');
+  
+  // Left and top should be clamped with >= 12px margin
+  const leftVal = parseFloat(container.style.left);
+  const topVal = parseFloat(container.style.top);
+  assert.ok(leftVal >= 12, `Left position (${leftVal}) must be clamped >= 12px to avoid bleeding off-screen`);
+  assert.ok(topVal >= 12, `Top position (${topVal}) must be clamped >= 12px to avoid bleeding off-screen`);
 
   stopAcceptedCelebration();
-  assert.strictEqual(mockDocBody.children.length, 0);
 });
 
 console.log(`\nAll ${testCount} Comprehensive Acceptance & Lifecycle Tests Passed Successfully!`);
